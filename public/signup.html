@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carvèl — Create Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --olive-dark:#353b2e;--olive:#4a5240;
+      --cream:#f5f0e6;--cream-dark:#ede7d9;--white:#faf8f3;
+      --text:#2a2a22;--muted:#7a7a68;--accent:#c4a96b;--error:#c0614a;
+    }
+    body{
+      font-family:'Jost',sans-serif;
+      background:var(--olive-dark);
+      min-height:100vh;display:grid;grid-template-columns:1fr 1fr;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left{
+      background:var(--olive-dark);
+      display:flex;flex-direction:column;justify-content:space-between;
+      padding:2.5rem 3rem;position:relative;overflow:hidden;
+    }
+    .left::before{
+      content:'';position:absolute;top:15%;left:-5%;width:200px;height:200px;
+      background-image:radial-gradient(circle,rgba(196,169,107,.2) 1.5px,transparent 1.5px);
+      background-size:14px 14px;pointer-events:none;
+    }
+    .left::after{
+      content:'';position:absolute;bottom:10%;right:5%;width:150px;height:150px;
+      background-image:radial-gradient(circle,rgba(196,169,107,.12) 1.5px,transparent 1.5px);
+      background-size:14px 14px;pointer-events:none;
+    }
+
+    .logo{text-decoration:none;position:relative;z-index:1;}
+    .logo-name{
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:1.2rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cream);
+    }
+    .logo-tag{font-size:.48rem;font-weight:300;color:var(--accent);letter-spacing:.32em;text-transform:uppercase;margin-top:.15rem;}
+
+    .left-content{position:relative;z-index:1;}
+    .left-eyebrow{
+      font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--accent);margin-bottom:1.25rem;
+      display:flex;align-items:center;gap:.6rem;
+    }
+    .left-eyebrow::before{content:'';width:1.5rem;height:1px;background:var(--accent);}
+    .left-content h2{
+      font-family:'Playfair Display',serif;font-size:clamp(2rem,3vw,3rem);
+      font-weight:400;color:var(--cream);line-height:1.15;margin-bottom:1.25rem;
+    }
+    .left-content h2 em{font-style:italic;color:var(--accent);}
+    .left-content p{font-size:.88rem;color:rgba(245,240,230,.5);line-height:1.8;max-width:340px;}
+
+    .role-cards{display:flex;flex-direction:column;gap:.75rem;margin-top:2.5rem;}
+    .role-card{
+      display:flex;align-items:center;gap:1rem;
+      background:rgba(245,240,230,.05);border:1px solid rgba(245,240,230,.1);
+      border-radius:.75rem;padding:.85rem 1.1rem;
+    }
+    .role-card-icon{font-size:1.3rem;}
+    .role-card-name{font-family:'Playfair Display',serif;color:var(--cream);font-size:.9rem;}
+    .role-card-desc{font-size:.72rem;color:rgba(245,240,230,.4);margin-top:.1rem;}
+
+    .left-footer{font-size:.72rem;color:rgba(245,240,230,.25);letter-spacing:.06em;position:relative;z-index:1;}
+
+    /* ── RIGHT PANEL ── */
+    .right{
+      background:var(--white);
+      display:flex;align-items:center;justify-content:center;
+      padding:3rem 2rem;
+    }
+
+    .signup-box{
+      width:100%;max-width:420px;
+      animation:fadeUp .7s ease both;
+    }
+
+    .signup-header{margin-bottom:2rem;}
+    .signup-header h1{
+      font-family:'Playfair Display',serif;
+      font-size:2rem;font-weight:400;font-style:italic;
+      color:var(--text);margin-bottom:.4rem;
+    }
+    .signup-header p{font-size:.85rem;color:var(--muted);}
+
+    /* role tabs */
+    .role-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.75rem;}
+    .role-tab{
+      padding:.65rem .5rem;border-radius:.5rem;
+      border:1.5px solid var(--cream-dark);background:transparent;
+      cursor:pointer;font-family:'Jost',sans-serif;font-size:.78rem;
+      color:var(--muted);text-align:center;
+      transition:all .2s;
+      display:flex;flex-direction:column;align-items:center;gap:.3rem;
+    }
+    .role-tab:hover{border-color:var(--accent);color:var(--text);}
+    .role-tab.active{border-color:var(--olive-dark);background:var(--olive-dark);color:var(--cream);}
+    .role-tab-icon{font-size:1.1rem;}
+
+    /* form */
+    .form-group{margin-bottom:1.1rem;}
+    .form-label{
+      display:block;font-size:.72rem;font-weight:500;
+      letter-spacing:.1em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:.45rem;
+    }
+    .form-input{
+      width:100%;padding:.82rem 1rem;
+      border:1.5px solid var(--cream-dark);border-radius:.5rem;
+      background:var(--white);font-family:'Jost',sans-serif;
+      font-size:.92rem;color:var(--text);outline:none;
+      transition:border-color .2s,box-shadow .2s;
+    }
+    .form-input:focus{border-color:var(--olive);box-shadow:0 0 0 3px rgba(74,82,64,.08);}
+    .form-input::placeholder{color:#bbb;}
+    .form-input.invalid{border-color:var(--error);}
+
+    .pw-wrap{position:relative;}
+    .toggle-pw{
+      position:absolute;right:1rem;top:50%;transform:translateY(-50%);
+      background:none;border:none;cursor:pointer;
+      font-size:1rem;color:var(--muted);padding:0;line-height:1;
+    }
+
+    /* password strength */
+    .pw-strength{margin-top:.4rem;display:none;}
+    .pw-strength.visible{display:block;}
+    .strength-bar{
+      height:3px;border-radius:2px;
+      background:var(--cream-dark);overflow:hidden;margin-bottom:.25rem;
+    }
+    .strength-fill{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0;}
+    .strength-label{font-size:.65rem;color:var(--muted);}
+
+    .error-msg{display:none;font-size:.75rem;color:var(--error);margin-top:.3rem;}
+    .error-msg.visible{display:block;}
+
+    .btn-submit{
+      width:100%;padding:.95rem;
+      background:var(--olive-dark);color:var(--cream);
+      border:none;border-radius:.5rem;
+      font-family:'Jost',sans-serif;font-size:.9rem;font-weight:500;
+      letter-spacing:.06em;cursor:pointer;margin-top:.5rem;
+      transition:background .2s,transform .15s;
+      position:relative;overflow:hidden;
+    }
+    .btn-submit:hover{background:var(--olive);transform:translateY(-1px);}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .btn-spinner{
+      display:none;width:16px;height:16px;
+      border:2px solid rgba(245,240,230,.3);border-top-color:var(--cream);
+      border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;
+    }
+    .btn-submit.loading .btn-text{display:none;}
+    .btn-submit.loading .btn-spinner{display:block;}
+
+    .divider{display:flex;align-items:center;gap:1rem;margin:1.4rem 0;color:var(--muted);font-size:.78rem;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--cream-dark);}
+
+    .signup-footer{text-align:center;font-size:.82rem;color:var(--muted);}
+    .signup-footer a{color:var(--olive);text-decoration:none;font-weight:500;}
+    .signup-footer a:hover{text-decoration:underline;}
+
+    /* success screen */
+    .success-screen{
+      display:none;text-align:center;padding:2rem 0;
+      animation:fadeUp .5s ease both;
+    }
+    .success-screen.visible{display:block;}
+    .success-icon{font-size:3rem;margin-bottom:1rem;}
+    .success-screen h2{
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:1.6rem;color:var(--text);margin-bottom:.5rem;
+    }
+    .success-screen p{font-size:.88rem;color:var(--muted);margin-bottom:1.5rem;}
+    .btn-goto{
+      display:inline-block;padding:.85rem 2rem;
+      background:var(--olive-dark);color:var(--cream);
+      border-radius:.5rem;text-decoration:none;
+      font-size:.88rem;font-weight:500;letter-spacing:.06em;
+      transition:background .2s;
+    }
+    .btn-goto:hover{background:var(--olive);}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:768px){
+      body{grid-template-columns:1fr;}
+      .left{display:none;}
+      .right{background:var(--olive-dark);}
+      .signup-box{background:var(--white);border-radius:1.25rem;padding:2rem;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left">
+  <a href="index.html" class="logo">
+    <div class="logo-name">Carvèl</div>
+    <div class="logo-tag">Elderly Care</div>
+  </a>
+
+  <div class="left-content">
+    <div class="left-eyebrow">New Account</div>
+    <h2>Join the circle<br>of <em>care.</em></h2>
+    <p>Create your account and start coordinating care seamlessly with your team.</p>
+
+    <div class="role-cards">
+      <div class="role-card">
+        <span class="role-card-icon">🧑‍⚕️</span>
+        <div>
+          <div class="role-card-name">Caretaker</div>
+          <div class="role-card-desc">Log vitals, meds & appointments</div>
+        </div>
+      </div>
+      <div class="role-card">
+        <span class="role-card-icon">👨‍👩‍👧</span>
+        <div>
+          <div class="role-card-name">Family Member</div>
+          <div class="role-card-desc">Monitor health remotely</div>
+        </div>
+      </div>
+      <div class="role-card">
+        <span class="role-card-icon">👨‍⚕️</span>
+        <div>
+          <div class="role-card-name">Doctor</div>
+          <div class="role-card-desc">Manage records & prescriptions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="left-footer">© 2025 Carvèl. Elderly Care Management.</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+  <div class="signup-box">
+
+    <!-- Form -->
+    <div id="formSection">
+      <div class="signup-header">
+        <h1>Create account</h1>
+        <p>Select your role and set your credentials</p>
+      </div>
+
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button class="role-tab active" data-role="caretaker" onclick="selectRole(this)">
+          <span class="role-tab-icon">🧑‍⚕️</span>Caretaker
+        </button>
+        <button class="role-tab" data-role="family" onclick="selectRole(this)">
+          <span class="role-tab-icon">👨‍👩‍👧</span>Family
+        </button>
+        <button class="role-tab" data-role="doctor" onclick="selectRole(this)">
+          <span class="role-tab-icon">👨‍⚕️</span>Doctor
+        </button>
+      </div>
+
+      <!-- Username -->
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" id="username" class="form-input" placeholder="Choose a username" autocomplete="username"/>
+        <span class="error-msg" id="username-error"></span>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" class="form-input" placeholder="Create a password" oninput="checkStrength()"/>
+          <button class="toggle-pw" onclick="togglePw('password')" type="button">👁</button>
+        </div>
+        <div class="pw-strength" id="pwStrength">
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="strength-label" id="strengthLabel"></div>
+        </div>
+        <span class="error-msg" id="password-error"></span>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="confirmPassword" class="form-input" placeholder="Re-enter your password"/>
+          <button class="toggle-pw" onclick="togglePw('confirmPassword')" type="button">👁</button>
+        </div>
+        <span class="error-msg" id="confirm-error"></span>
+      </div>
+
+      <span class="error-msg" id="signup-error" style="margin-bottom:.75rem;font-size:.82rem;"></span>
+
+      <button class="btn-submit" id="signupBtn" onclick="handleSignup()">
+        <span class="btn-text">Create Account</span>
+        <div class="btn-spinner"></div>
+      </button>
+
+      <div class="divider">or</div>
+
+      <div class="signup-footer">
+        Already have an account? <a href="login.html">Sign in</a>
+      </div>
+    </div>
+
+    <!-- Success Screen -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✅</div>
+      <h2>Account created!</h2>
+      <p>Your Carvèl account is ready. Sign in to access your dashboard.</p>
+      <a href="login.html" class="btn-goto">Go to Sign In →</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/signup.js"></script>
+</body>
+</html>

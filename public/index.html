@@ -76,6 +76,18 @@
     }
     .nav-cta:hover { background: var(--cream) !important; color: var(--olive-dark) !important; border-color: var(--cream) !important; }
 
+    .nav-signup {
+      background: var(--accent) !important;
+      color: var(--olive-dark) !important;
+      padding: 0.45rem 1.4rem; border-radius: 0 !important;
+      font-size: 0.72rem !important;
+      letter-spacing: 0.12em !important;
+      font-weight: 500 !important;
+      text-transform: none !important;
+      transition: background 0.2s !important;
+    }
+    .nav-signup:hover { background: #d4b97b !important; color: var(--olive-dark) !important; }
+
     /* ── HERO ── */
     .hero {
       background: var(--olive-dark);
@@ -130,6 +142,16 @@
       transition: background 0.2s, transform 0.15s;
     }
     .btn-primary:hover { background: var(--accent); color: #fff; transform: translateY(-2px); }
+
+    .btn-outline-hero {
+      border: 1.5px solid rgba(245,240,230,0.4);
+      color: rgba(245,240,230,0.8);
+      padding: 0.85rem 2.2rem; border-radius: 2rem;
+      text-decoration: none; font-size: 0.92rem;
+      display: inline-block;
+      transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+    .btn-outline-hero:hover { border-color: var(--cream); color: var(--cream); transform: translateY(-2px); }
 
     .hero-image {
       animation: fadeUp 0.8s 0.15s ease both;
@@ -371,6 +393,7 @@
     <li><a href="#highlights">Features</a></li>
     <li><a href="#about">About</a></li>
     <li><a href="login.html" class="nav-cta">Sign in</a></li>
+    <li><a href="signup.html" class="nav-signup">Sign up</a></li>
   </ul>
 </nav>
 
@@ -384,6 +407,7 @@
       ensuring nothing is ever overlooked in the care of those who matter most.
     </p>
     <a href="login.html" class="btn-primary">Enter your dashboard</a>
+    <a href="signup.html" class="btn-outline-hero">Create account</a>
   </div>
 
   <div class="hero-image">
