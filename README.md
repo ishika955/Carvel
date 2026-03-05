@@ -41,13 +41,13 @@ To create a reliable digital ecosystem that ensures elderly individuals receive 
 
 🛠️ Tech Stack
 
-Frontend:
+Frontend: HTML, CSS, JavaScript  
 
-Backend:
+Backend: Node.js, Express 
 
-Database:
+Database: JSON-based file storage  
 
-Authentication:
+Authentication: Token-based middleware
 
 📌 Future Improvements
 

@@ -5,7 +5,7 @@ const { readJSON, writeJSON } = require("../services/fileStore");
 const ALERTS_FILE = "data/alerts.json";
 
 // GET all alerts
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
     const alerts = await readJSON(ALERTS_FILE, []);
     if (!Array.isArray(alerts)) {
@@ -17,12 +17,12 @@ router.get("/", async (req, res) => {
 
     res.status(200).json({ success: true, data: alerts });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message || "Server error" });
+     next(err);
   }
 });
 
 // GET alert by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res ,next) => {
   try {
     const id = Number(req.params.id);
 
@@ -41,12 +41,12 @@ router.get("/:id", async (req, res) => {
 
     res.status(200).json({ success: true, data: alert });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message || "Server error" });
+     next(err);
   }
 });
 
 // POST create alert
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   try {
     const { patientId, message, level } = req.body;
 
@@ -81,13 +81,13 @@ router.post("/", async (req, res) => {
 
     res.status(201).json({ success: true, data: newAlert });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message || "Server error" });
+     next(err);
   }
 });
 
 const PATIENTS_FILE = "data/patients.json";
 
-router.post("/run", async (req, res) => {
+router.post("/run", async (req, res, next) => {
   try {
     const patients = await readJSON(PATIENTS_FILE, []);
     const alerts = await readJSON(ALERTS_FILE, []);
@@ -132,10 +132,7 @@ if (alreadyOpen) continue;
       data: created,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+     next(err);
   }
 });
 
