@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carvèl — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --olive:#4a5240;--olive-dark:#353b2e;--olive-mid:#48523f;
+      --cream:#f5f0e6;--cream-dark:#e8e0d0;--white:#faf8f3;
+      --text:#2a2a22;--muted:#7a7a68;--accent:#c4a96b;
+      --green:#5a8f6a;--red:#c4714a;--blue:#5a7a9f;
+      --sw:220px;
+    }
+    html,body{height:100%}
+    body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);display:flex;overflow:hidden}
+
+    /* ═══ SIDEBAR ═══ */
+    .sidebar{
+      width:var(--sw);background:var(--olive-dark);
+      display:flex;flex-direction:column;
+      position:fixed;inset:0 auto 0 0;z-index:50;
+    }
+    .sb-logo{
+      padding:1.6rem 1.4rem 1.2rem;
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+    .sb-logo-name{
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:1.1rem;letter-spacing:.2em;text-transform:uppercase;
+      color:var(--cream);
+    }
+    .sb-logo-tag{
+      font-size:.44rem;letter-spacing:.32em;text-transform:uppercase;
+      color:var(--accent);margin-top:.18rem;
+    }
+    .sb-user{
+      padding:.9rem 1.4rem;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      display:flex;align-items:center;gap:.7rem;
+    }
+    .sb-avatar{
+      width:34px;height:34px;border-radius:50%;
+      background:rgba(196,169,107,.2);border:1px solid rgba(196,169,107,.4);
+      display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;
+    }
+    .sb-uname{font-size:.85rem;font-weight:500;color:var(--cream);}
+    .sb-urole{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);}
+
+    .sb-section-label{
+      padding:.9rem 1.4rem .35rem;
+      font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;
+      color:rgba(245,240,230,.28);
+    }
+    .sb-nav{flex:1;overflow-y:auto;padding-bottom:1rem;}
+    .sb-item{
+      display:flex;align-items:center;gap:.75rem;
+      padding:.65rem 1.4rem;width:100%;
+      border:none;background:none;text-align:left;cursor:pointer;
+      font-family:'Jost',sans-serif;font-size:.84rem;
+      color:rgba(245,240,230,.5);
+      border-left:2px solid transparent;
+      transition:all .15s;
+    }
+    .sb-item:hover{background:rgba(255,255,255,.04);color:var(--cream);}
+    .sb-item.active{
+      background:rgba(255,255,255,.07);
+      color:var(--cream);border-left-color:var(--accent);
+    }
+    .sb-item-icon{font-size:.95rem;flex-shrink:0;}
+
+    .sb-footer{
+      padding:.9rem 1.4rem;border-top:1px solid rgba(255,255,255,.07);
+    }
+    .sb-logout{
+      width:100%;padding:.55rem;background:none;cursor:pointer;
+      border:1px solid rgba(255,255,255,.12);border-radius:.35rem;
+      font-family:'Jost',sans-serif;font-size:.72rem;
+      letter-spacing:.1em;text-transform:uppercase;
+      color:rgba(245,240,230,.4);transition:all .2s;
+    }
+    .sb-logout:hover{border-color:var(--red);color:var(--red);}
+
+    /* ═══ MAIN ═══ */
+    .main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+    .topbar{
+      background:var(--white);border-bottom:1px solid var(--cream-dark);
+      padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;
+      flex-shrink:0;
+    }
+    .topbar-left{display:flex;align-items:center;gap:1rem;}
+    .topbar-section{
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:1.2rem;color:var(--text);
+    }
+    .topbar-date{font-size:.75rem;color:var(--muted);}
+    .topbar-right{display:flex;align-items:center;gap:.75rem;}
+    .alert-pill{
+      display:none;align-items:center;gap:.4rem;
+      background:rgba(196,113,74,.1);border:1px solid rgba(196,113,74,.25);
+      border-radius:2rem;padding:.3rem .85rem;
+      font-size:.72rem;color:var(--red);cursor:pointer;
+    }
+    .alert-pill.visible{display:flex;}
+
+    /* page content area */
+    .pages{flex:1;overflow-y:auto;padding:1.75rem 2rem;}
+
+    /* each "page" shown/hidden by JS */
+    .page{display:none;animation:fadeUp .25s ease both;}
+    .page.active{display:block;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ═══ PAGE HEADER ═══ */
+    .ph{margin-bottom:1.5rem;}
+    .ph-title{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--text);}
+    .ph-sub{font-size:.8rem;color:var(--muted);margin-top:.2rem;}
+
+    /* ═══ STAT ROW ═══ */
+    .stats{display:grid;gap:1rem;margin-bottom:1.75rem;}
+    .stats.s4{grid-template-columns:repeat(4,1fr);}
+    .stats.s3{grid-template-columns:repeat(3,1fr);}
+    .stat{
+      background:var(--white);border-radius:.75rem;
+      border:1px solid var(--cream-dark);padding:1.2rem 1.4rem;
+    }
+    .stat.dark{background:var(--olive-dark);border-color:var(--olive-dark);}
+    .stat-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem;}
+    .stat.dark .stat-lbl{color:rgba(245,240,230,.4);}
+    .stat-val{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--text);line-height:1;}
+    .stat.dark .stat-val{color:var(--cream);}
+    .stat-sub{font-size:.7rem;color:var(--muted);margin-top:.25rem;}
+    .stat.dark .stat-sub{color:rgba(245,240,230,.35);}
+    .stat-trend{
+      display:inline-flex;align-items:center;gap:.3rem;
+      font-size:.68rem;margin-top:.3rem;padding:.15rem .5rem;
+      border-radius:1rem;
+    }
+    .trend-up{background:rgba(90,143,106,.12);color:var(--green);}
+    .trend-down{background:rgba(196,113,74,.1);color:var(--red);}
+
+    /* ═══ GRID LAYOUTS ═══ */
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+    .g13{display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+    .g31{display:grid;grid-template-columns:1fr 1.4fr;gap:1.25rem;margin-bottom:1.25rem;}
+    .full{margin-bottom:1.25rem;}
+
+    /* ═══ CARD ═══ */
+    .card{
+      background:var(--white);border-radius:.75rem;
+      border:1px solid var(--cream-dark);padding:1.4rem;
+    }
+    .card-hd{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:1.1rem;
+    }
+    .card-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--text);}
+    .badge{
+      font-size:.62rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;
+      padding:.18rem .55rem;border-radius:1rem;
+      background:var(--cream);color:var(--muted);
+    }
+    .badge.green{background:rgba(90,143,106,.12);color:var(--green);}
+    .badge.red{background:rgba(196,113,74,.1);color:var(--red);}
+    .badge.gold{background:rgba(196,169,107,.15);color:#9a7530;}
+
+    /* ═══ FORM ═══ */
+    .fg{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+    .fg.fg1{grid-template-columns:1fr;}
+    .fgrp{display:flex;flex-direction:column;gap:.35rem;}
+    .fgrp.span2{grid-column:1/-1;}
+    .flbl{font-size:.62rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+    .finp,.fsel,.ftxt{
+      width:100%;padding:.65rem .85rem;
+      border:1.5px solid var(--cream-dark);border-radius:.4rem;
+      background:var(--white);font-family:'Jost',sans-serif;
+      font-size:.86rem;color:var(--text);outline:none;
+      transition:border-color .2s;
+    }
+    .finp:focus,.fsel:focus,.ftxt:focus{border-color:var(--olive);}
+    .ftxt{resize:vertical;min-height:75px;}
+    .factions{display:flex;gap:.6rem;margin-top:.6rem;}
+    .btn{
+      padding:.65rem 1.4rem;border-radius:.4rem;border:none;cursor:pointer;
+      font-family:'Jost',sans-serif;font-size:.82rem;font-weight:500;
+      letter-spacing:.05em;transition:all .2s;
+    }
+    .btn-dark{background:var(--olive-dark);color:var(--cream);}
+    .btn-dark:hover{background:var(--olive);transform:translateY(-1px);}
+    .btn-ghost{background:transparent;color:var(--text);border:1.5px solid var(--cream-dark);}
+    .btn-ghost:hover{border-color:var(--olive);}
+
+    /* ═══ MED ROWS ═══ */
+    .med-list{display:flex;flex-direction:column;gap:.5rem;}
+    .med-row{
+      display:flex;align-items:center;gap:.85rem;
+      padding:.7rem .9rem;border-radius:.5rem;
+      background:var(--cream);border:1px solid var(--cream-dark);
+    }
+    .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .dot.given{background:var(--green);}
+    .dot.missed{background:var(--red);}
+    .dot.pending{background:var(--accent);}
+    .med-info{flex:1;}
+    .med-name{font-size:.86rem;font-weight:500;}
+    .med-meta{font-size:.7rem;color:var(--muted);margin-top:.1rem;}
+    .med-time{font-size:.75rem;color:var(--muted);}
+    .tag{
+      font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;
+      padding:.15rem .5rem;border-radius:1rem;flex-shrink:0;
+    }
+    .tag.given{background:rgba(90,143,106,.12);color:var(--green);}
+    .tag.missed{background:rgba(196,113,74,.1);color:var(--red);}
+    .tag.pending{background:rgba(196,169,107,.15);color:#9a7530;}
+
+    /* ═══ ALERT ROWS ═══ */
+    .al-list{display:flex;flex-direction:column;gap:.65rem;}
+    .al-row{
+      display:flex;gap:.85rem;padding:.9rem 1rem;
+      border-radius:.5rem;border-left:3px solid var(--red);
+      background:rgba(196,113,74,.05);
+    }
+    .al-row.info{border-left-color:var(--accent);background:rgba(196,169,107,.06);}
+    .al-row.ok{border-left-color:var(--green);background:rgba(90,143,106,.06);}
+    .al-icon{font-size:1rem;flex-shrink:0;margin-top:.1rem;}
+    .al-title{font-size:.86rem;font-weight:500;}
+    .al-desc{font-size:.75rem;color:var(--muted);margin-top:.12rem;}
+    .al-time{font-size:.68rem;color:var(--muted);margin-top:.2rem;}
+
+    /* ═══ VITALS BOXES ═══ */
+    .vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;}
+    .vbox{
+      background:var(--cream);border-radius:.5rem;
+      border:1px solid var(--cream-dark);
+      padding:.9rem;text-align:center;
+    }
+    .vbox-val{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--text);}
+    .vbox-unit{font-size:.65rem;color:var(--muted);}
+    .vbox-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:.25rem;}
+
+    /* ═══ REPORT ROWS ═══ */
+    .rpt-list{display:flex;flex-direction:column;gap:.5rem;}
+    .rpt-row{
+      display:flex;align-items:center;gap:.85rem;
+      padding:.75rem .9rem;border-radius:.5rem;
+      background:var(--cream);border:1px solid var(--cream-dark);
+      cursor:pointer;transition:border-color .15s;
+    }
+    .rpt-row:hover{border-color:var(--olive-mid);}
+    .rpt-icon{font-size:1rem;}
+    .rpt-name{font-size:.86rem;font-weight:500;flex:1;}
+    .rpt-by{font-size:.68rem;color:var(--accent);}
+    .rpt-date{font-size:.72rem;color:var(--muted);}
+
+    /* ═══ TIMELINE ═══ */
+    .timeline{display:flex;flex-direction:column;gap:0;}
+    .tl-item{display:flex;gap:1rem;padding-bottom:1.1rem;position:relative;}
+    .tl-item:last-child{padding-bottom:0;}
+    .tl-left{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0;}
+    .tl-dot{
+      width:10px;height:10px;border-radius:50%;
+      background:var(--accent);border:2px solid var(--white);
+      flex-shrink:0;margin-top:3px;
+    }
+    .tl-dot.ok{background:var(--green);}
+    .tl-dot.warn{background:var(--red);}
+    .tl-line{width:1px;flex:1;background:var(--cream-dark);margin-top:3px;}
+    .tl-item:last-child .tl-line{display:none;}
+    .tl-title{font-size:.84rem;font-weight:500;}
+    .tl-sub{font-size:.73rem;color:var(--muted);margin-top:.1rem;}
+    .tl-time{font-size:.67rem;color:var(--muted);margin-top:.2rem;}
+
+    /* ═══ EMPTY STATE ═══ */
+    .empty{
+      text-align:center;padding:2rem 1rem;
+      font-size:.82rem;color:var(--muted);
+    }
+
+    /* ═══ TOAST ═══ */
+    .toast{
+      position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
+      background:var(--olive-dark);color:var(--cream);
+      padding:.8rem 1.4rem;border-radius:.5rem;
+      font-size:.83rem;display:flex;align-items:center;gap:.5rem;
+      box-shadow:0 8px 24px rgba(0,0,0,.15);
+      transform:translateY(80px);opacity:0;
+      transition:transform .3s,opacity .3s;
+      pointer-events:none;
+    }
+    .toast.show{transform:translateY(0);opacity:1;}
+    .toast.err{background:var(--red);}
+
+    @media(max-width:900px){
+      :root{--sw:56px;}
+      .sb-logo-name,.sb-logo-tag,.sb-uname,.sb-urole,.sb-section-label,.sb-item span:last-child{display:none;}
+      .sb-item{justify-content:center;padding:.7rem;}
+      .stats.s4{grid-template-columns:repeat(2,1fr);}
+      .g2,.g3,.g13,.g31{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-name">Carvèl</div>
+    <div class="sb-logo-tag">Elderly Care</div>
+  </div>
+
+  <div class="sb-user">
+    <div class="sb-avatar" id="sbAvatar">🧑‍⚕️</div>
+    <div>
+      <div class="sb-uname" id="sbName">User</div>
+      <div class="sb-urole" id="sbRole">Role</div>
+    </div>
+  </div>
+
+  <nav class="sb-nav" id="sbNav">
+    <!-- injected by JS -->
+  </nav>
+
+  <div class="sb-footer">
+    <button class="sb-logout" onclick="logout()">Sign Out</button>
+  </div>
+</aside>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-section" id="topSection">Dashboard</div>
+      <div class="topbar-date" id="topDate"></div>
+    </div>
+    <div class="topbar-right">
+      <div class="alert-pill" id="alertPill" onclick="goPage('alerts')">
+        🔔 <span id="alertCount">0</span> alerts
+      </div>
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div class="pages" id="pages">
+
+    <!-- ══════════════════════════════════════════
+         CARETAKER PAGES
+    ══════════════════════════════════════════ -->
+
+    <!-- CT: Overview -->
+    <div class="page" id="p-ct-overview">
+      <div class="ph">
+        <div class="ph-title">Good morning 👋</div>
+        <div class="ph-sub" id="ct-greetSub">Here's today's care summary</div>
+      </div>
+      <div class="stats s4">
+        <div class="stat dark">
+          <div class="stat-lbl">Patients Today</div>
+          <div class="stat-val" id="ct-statPat">—</div>
+          <div class="stat-sub">Under your care</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Meds Given</div>
+          <div class="stat-val" id="ct-statMeds">—</div>
+          <div class="stat-sub">Out of scheduled</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Active Alerts</div>
+          <div class="stat-val" id="ct-statAlerts">—</div>
+          <div class="stat-sub">Require attention</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Appointments</div>
+          <div class="stat-val" id="ct-statAppt">—</div>
+          <div class="stat-sub">Upcoming</div>
+        </div>
+      </div>
+      <div class="g13">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Today's Medication Schedule</div>
+            <span class="badge gold">Today</span>
+          </div>
+          <div class="med-list" id="ct-overviewMeds">
+            <div class="empty">Loading medications...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Recent Activity</div>
+          </div>
+          <div class="timeline" id="ct-timeline">
+            <div class="empty">No recent activity</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CT: Log Vitals -->
+    <div class="page" id="p-ct-vitals">
+      <div class="ph">
+        <div class="ph-title">Log Health Vitals</div>
+        <div class="ph-sub">Record patient vitals after each check-up</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">New Vitals Entry</div><span class="badge green">New</span></div>
+          <div class="fg">
+            <div class="fgrp"><label class="flbl">Patient Name</label><input class="finp" id="vPatient" placeholder="Full name"/></div>
+            <div class="fgrp"><label class="flbl">Date & Time</label><input type="datetime-local" class="finp" id="vDate"/></div>
+            <div class="fgrp"><label class="flbl">Temperature (°F)</label><input type="number" class="finp" id="vTemp" placeholder="98.6" step="0.1"/></div>
+            <div class="fgrp"><label class="flbl">Pulse (bpm)</label><input type="number" class="finp" id="vPulse" placeholder="72"/></div>
+            <div class="fgrp"><label class="flbl">Blood Pressure</label><input class="finp" id="vBP" placeholder="120/80"/></div>
+            <div class="fgrp"><label class="flbl">Oxygen Sat. (%)</label><input type="number" class="finp" id="vO2" placeholder="98"/></div>
+            <div class="fgrp span2"><label class="flbl">Observations / Notes</label><textarea class="ftxt" id="vNotes" placeholder="Any observations..."></textarea></div>
+          </div>
+          <div class="factions">
+            <button class="btn btn-dark" onclick="submitVitals()">Save Vitals</button>
+            <button class="btn btn-ghost" onclick="clearForm(['vPatient','vTemp','vPulse','vBP','vO2','vNotes'])">Clear</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Previous Entries</div></div>
+          <div class="rpt-list" id="ct-prevVitals">
+            <div class="empty">No previous entries yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CT: Medications -->
+    <div class="page" id="p-ct-medications">
+      <div class="ph">
+        <div class="ph-title">Log Medication</div>
+        <div class="ph-sub">Record medications given to patients</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Log Medication Given</div><span class="badge green">New Entry</span></div>
+          <div class="fg">
+            <div class="fgrp"><label class="flbl">Patient</label><input class="finp" id="mPatient" placeholder="Patient name"/></div>
+            <div class="fgrp"><label class="flbl">Medication Name</label><input class="finp" id="mName" placeholder="e.g. Metformin"/></div>
+            <div class="fgrp"><label class="flbl">Dosage</label><input class="finp" id="mDose" placeholder="e.g. 500mg"/></div>
+            <div class="fgrp"><label class="flbl">Time Given</label><input type="time" class="finp" id="mTime"/></div>
+            <div class="fgrp span2"><label class="flbl">Status</label>
+              <select class="fsel" id="mStatus">
+                <option value="given">✅ Given</option>
+                <option value="missed">❌ Missed</option>
+                <option value="refused">⚠️ Refused by patient</option>
+              </select>
+            </div>
+            <div class="fgrp span2"><label class="flbl">Notes</label><textarea class="ftxt" id="mNotes" placeholder="Any notes..." style="min-height:60px"></textarea></div>
+          </div>
+          <div class="factions">
+            <button class="btn btn-dark" onclick="submitMedication()">Log Medication</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Today's Schedule</div><span class="badge gold">Today</span></div>
+          <div class="med-list" id="ct-medSchedule">
+            <div class="empty">Loading schedule...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CT: Appointments -->
+    <div class="page" id="p-ct-appointments">
+      <div class="ph">
+        <div class="ph-title">Appointments</div>
+        <div class="ph-sub">Book and manage doctor appointments</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Book New Appointment</div></div>
+          <div class="fg">
+            <div class="fgrp"><label class="flbl">Patient</label><input class="finp" id="aPatient" placeholder="Patient name"/></div>
+            <div class="fgrp"><label class="flbl">Doctor</label><input class="finp" id="aDoctor" placeholder="Doctor name"/></div>
+            <div class="fgrp"><label class="flbl">Date</label><input type="date" class="finp" id="aDate"/></div>
+            <div class="fgrp"><label class="flbl">Time</label><input type="time" class="finp" id="aTime"/></div>
+            <div class="fgrp span2"><label class="flbl">Reason for Visit</label><textarea class="ftxt" id="aReason" placeholder="Describe the reason..."></textarea></div>
+          </div>
+          <div class="factions">
+            <button class="btn btn-dark" onclick="submitAppointment()">Book Appointment</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Upcoming Appointments</div></div>
+          <div id="ct-apptList" class="rpt-list">
+            <div class="empty">No appointments scheduled</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         FAMILY PAGES
+    ══════════════════════════════════════════ -->
+
+    <!-- FAM: Overview -->
+    <div class="page" id="p-fam-overview">
+      <div class="ph">
+        <div class="ph-title">Family Overview</div>
+        <div class="ph-sub">Real-time health status of your loved one</div>
+      </div>
+      <div class="stats s4">
+        <div class="stat dark">
+          <div class="stat-lbl">Overall Status</div>
+          <div class="stat-val" id="fam-statStatus">—</div>
+          <div class="stat-sub">As of today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Meds Taken</div>
+          <div class="stat-val" id="fam-statMeds">—</div>
+          <div class="stat-sub">Today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Active Alerts</div>
+          <div class="stat-val" id="fam-statAlerts">—</div>
+          <div class="stat-sub">Unread</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Last Check-in</div>
+          <div class="stat-val" id="fam-statCheckin">—</div>
+          <div class="stat-sub">By caretaker</div>
+        </div>
+      </div>
+      <div class="g31">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Latest Vitals</div><span class="badge">Read Only</span></div>
+          <div class="vgrid">
+            <div class="vbox"><div class="vbox-val" id="fam-temp">—</div><div class="vbox-unit">°F</div><div class="vbox-lbl">Temperature</div></div>
+            <div class="vbox"><div class="vbox-val" id="fam-pulse">—</div><div class="vbox-unit">bpm</div><div class="vbox-lbl">Pulse</div></div>
+            <div class="vbox"><div class="vbox-val" id="fam-bp">—</div><div class="vbox-unit">mmHg</div><div class="vbox-lbl">Blood Pressure</div></div>
+            <div class="vbox"><div class="vbox-val" id="fam-o2">—</div><div class="vbox-unit">%</div><div class="vbox-lbl">Oxygen Sat.</div></div>
+            <div class="vbox" style="grid-column:span 2">
+              <div style="font-size:.78rem;color:var(--muted)" id="fam-vNotes">No notes recorded</div>
+              <div class="vbox-lbl" style="margin-top:.4rem">Caretaker Notes</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Recent Alerts</div><span class="badge red" id="fam-alertBadge">0 new</span></div>
+          <div class="al-list" id="fam-alertList"><div class="empty">Loading alerts...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAM: Alerts -->
+    <div class="page" id="p-fam-alerts">
+      <div class="ph">
+        <div class="ph-title">Alerts & Notifications</div>
+        <div class="ph-sub">All alerts from your caretaker</div>
+      </div>
+      <div class="full">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">All Alerts</div><span class="badge red" id="fam-allAlertBadge">Loading...</span></div>
+          <div class="al-list" id="fam-allAlerts"><div class="empty">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAM: Health Summary -->
+    <div class="page" id="p-fam-health">
+      <div class="ph">
+        <div class="ph-title">Health Summary</div>
+        <div class="ph-sub">Medication and care history this week</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Medication Summary</div><span class="badge gold">This Week</span></div>
+          <div class="med-list" id="fam-medSummary"><div class="empty">Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Vitals History</div></div>
+          <div class="rpt-list" id="fam-vitalHistory"><div class="empty">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         DOCTOR PAGES
+    ══════════════════════════════════════════ -->
+
+    <!-- DOC: Overview -->
+    <div class="page" id="p-doc-overview">
+      <div class="ph">
+        <div class="ph-title">Doctor Panel</div>
+        <div class="ph-sub">Review caretaker reports and manage prescriptions</div>
+      </div>
+      <div class="stats s4">
+        <div class="stat dark">
+          <div class="stat-lbl">Patients</div>
+          <div class="stat-val" id="doc-statPat">—</div>
+          <div class="stat-sub">Assigned</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Reports</div>
+          <div class="stat-val" id="doc-statRep">—</div>
+          <div class="stat-sub">From caretakers</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Appointments</div>
+          <div class="stat-val" id="doc-statAppt">—</div>
+          <div class="stat-sub">This week</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Prescriptions</div>
+          <div class="stat-val" id="doc-statRx">—</div>
+          <div class="stat-sub">Active</div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Caretaker Reports</div><span class="badge gold">Latest</span></div>
+          <div class="rpt-list" id="doc-reportList"><div class="empty">Loading reports...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Patient Vitals</div><span class="badge">Read Only</span></div>
+          <div class="vgrid" id="doc-vitals">
+            <div class="vbox"><div class="vbox-val" id="doc-temp">—</div><div class="vbox-unit">°F</div><div class="vbox-lbl">Temp</div></div>
+            <div class="vbox"><div class="vbox-val" id="doc-pulse">—</div><div class="vbox-unit">bpm</div><div class="vbox-lbl">Pulse</div></div>
+            <div class="vbox"><div class="vbox-val" id="doc-bp">—</div><div class="vbox-unit">mmHg</div><div class="vbox-lbl">BP</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOC: Reports -->
+    <div class="page" id="p-doc-reports">
+      <div class="ph">
+        <div class="ph-title">Caretaker Reports</div>
+        <div class="ph-sub">All health logs submitted by caretakers</div>
+      </div>
+      <div class="full">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">All Reports</div></div>
+          <div class="rpt-list" id="doc-allReports"><div class="empty">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOC: Prescriptions -->
+    <div class="page" id="p-doc-prescriptions">
+      <div class="ph">
+        <div class="ph-title">Prescriptions</div>
+        <div class="ph-sub">Update and manage patient prescriptions</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Update Prescription</div></div>
+          <div class="fg">
+            <div class="fgrp"><label class="flbl">Patient</label><input class="finp" id="rxPatient" placeholder="Patient name"/></div>
+            <div class="fgrp"><label class="flbl">Medication</label><input class="finp" id="rxMed" placeholder="Medicine name"/></div>
+            <div class="fgrp"><label class="flbl">Dosage</label><input class="finp" id="rxDose" placeholder="e.g. 500mg"/></div>
+            <div class="fgrp"><label class="flbl">Frequency</label>
+              <select class="fsel" id="rxFreq">
+                <option>Once daily</option><option>Twice daily</option>
+                <option>Three times daily</option><option>As needed</option>
+              </select>
+            </div>
+            <div class="fgrp span2"><label class="flbl">Diagnosis / Notes</label><textarea class="ftxt" id="rxNotes" placeholder="Diagnosis or instructions..."></textarea></div>
+          </div>
+          <div class="factions">
+            <button class="btn btn-dark" onclick="submitPrescription()">Update Prescription</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Active Prescriptions</div></div>
+          <div class="rpt-list" id="doc-rxList"><div class="empty">No prescriptions yet</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end pages -->
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ <span id="toastMsg">Saved</span></div>
+
+<script src="js/dashboard.js"></script>
+</body>
+</html>
