@@ -20,16 +20,11 @@ const NAV = {
     { icon:'📊', label:'Overview',        page:'fam-overview' },
     { icon:'🔔', label:'Alerts',          page:'fam-alerts' },
     { icon:'📋', label:'Health Summary',  page:'fam-health' },
-  ],
-  doctor: [
-    { icon:'📊', label:'Overview',       page:'doc-overview' },
-    { icon:'📁', label:'Reports',        page:'doc-reports' },
-    { icon:'💊', label:'Prescriptions',  page:'doc-prescriptions' },
   ]
 };
 
-const AVATARS = { caretaker:'🧑‍⚕️', family:'👨‍👩‍👧', doctor:'👨‍⚕️' };
-const ROLES   = { caretaker:'Caretaker', family:'Family Member', doctor:'Doctor' };
+const AVATARS = { caretaker:'🧑‍⚕️', family:'👨‍👩‍👧' };
+const ROLES   = { caretaker:'Caretaker', family:'Family Member' };
 
 // ── INIT ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
