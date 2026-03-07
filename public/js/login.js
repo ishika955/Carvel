@@ -44,10 +44,7 @@ function markInvalid(id) {
 
 // Main login handler
 async function handleLogin() {
-  sessionStorage.setItem('role', 'caretaker');
-  sessionStorage.setItem('username', 'Ishika');
-  window.location.href = 'dashboard.html';
-  return;
+  
   clearErrors();
 
   const username = document.getElementById('username').value.trim();
@@ -73,7 +70,7 @@ async function handleLogin() {
   btn.disabled = true;
 
   try {
-    const response = await fetch('/login', {
+    const response = await fetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
