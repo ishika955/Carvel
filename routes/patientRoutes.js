@@ -1,92 +1,149 @@
 const express = require("express");
 const router = express.Router();
 
-let patients = [
-    { id: 1, name: "Patient A", age: 70 },
-    { id: 2, name: "Patient B", age: 75 }
-];
+router.use((req, res, next) => {
+    console.log("Patients Router Middleware Running");
+    next();
+});
+
+const { readJSON, writeJSON } = require("../services/fileStore");
+const PATIENTS_FILE = "data/patients.json";
 
 // GET all patients (with optional age filter)
-
-router.get("/", (req, res) => {
+router.get("/", async (req, res, next) => {
+  try {
     const age = parseInt(req.query.age);
+    const patients = await readJSON(PATIENTS_FILE, []);
 
     let filteredPatients = patients;
-
     if (!isNaN(age)) {
-        filteredPatients = patients.filter(p => p.age === age);
+      filteredPatients = patients.filter((p) => Number(p.age) === age);
     }
 
     res.status(200).json({
-        success: true,
-        data: filteredPatients
+      success: true,
+      data: filteredPatients,
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
+// POST create patient
+router.post("/", async (req, res, next) => {
+  try {
+    
+    const patients = await readJSON(PATIENTS_FILE, []);
 
-
-
-router.post("/", (req, res) => {
-    const { name, age } = req.body;
-
-    if (!name || !age) {
-        return res.status(400).json({
-            success: false,
-            message: "Name and age are required"
-        });
-    }
-
-    const newPatient = {
-        id: patients.length + 1,
-        name,
-        age
+    const newEntry = {
+      id: patients.length + 1,
+      ...req.body
     };
 
-    patients.push(newPatient);
+    patients.push(newEntry);
 
-    res.status(201).json({
-        success: true,
-        data: newPatient
+    await writeJSON(PATIENTS_FILE, patients);
+
+    res.json({
+      success: true,
+      data: newEntry
     });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success:false,
+      message:"Server error"
+    });
+  }
 });
-router.put("/:id", (req, res) => {
+
+// PUT update patient
+router.put("/:id", async (req, res, next) => {
+  try {
     const id = parseInt(req.params.id);
-    const { name, age } = req.body;
 
-    const patient = patients.find(p => p.id === id);
-
-    if (!patient) {
-        return res.status(404).json({
-            success: false,
-            message: "Patient not found"
-        });
+     if (isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid patient ID",
+      });
     }
 
-    patient.name = name || patient.name;
-    patient.age = age || patient.age;
+    const { name, age } = req.body;
+
+    const patients = await readJSON(PATIENTS_FILE, []);
+
+if (!Array.isArray(patients)) {
+  return res.status(500).json({
+    success: false,
+    message: "patients.json must contain an array []",
+  });
+}
+
+    const index = patients.findIndex((p) => Number(p.id) === id);
+    if (index === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
+    }
+
+    if (name !== undefined) patients[index].name = String(name).trim();
+    if (age !== undefined) {
+      const ageNum = Number(age);
+      if (Number.isNaN(ageNum) || ageNum <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Age must be a valid number",
+        });
+      }
+      patients[index].age = ageNum;
+    }
+
+    await writeJSON(PATIENTS_FILE, patients);
 
     res.status(200).json({
-        success: true,
-        data: patient
+      success: true,
+      data: patients[index],
     });
+  } catch (err) {
+    next(err);
+  }
 });
-router.delete("/:id", (req, res) => {
+
+// DELETE patient
+router.delete("/:id", async (req, res, next) => {
+  try {
     const id = parseInt(req.params.id);
 
-    const index = patients.findIndex(p => p.id === id);
+    if (isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid patient ID",
+      });
+    }
+    
+    const patients = await readJSON(PATIENTS_FILE, []);
 
+    const index = patients.findIndex((p) => Number(p.id) === id);
     if (index === -1) {
-        return res.status(404).json({
-            success: false,
-            message: "Patient not found"
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
     }
 
     patients.splice(index, 1);
+    await writeJSON(PATIENTS_FILE, patients);
 
     res.status(200).json({
-        success: true,
-        message: "Patient deleted"
+      success: true,
+      message: "Patient deleted",
     });
+  } catch (err) {
+     next(err);
+  }
 });
+
 module.exports = router;

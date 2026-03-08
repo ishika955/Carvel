@@ -1,0 +1,24 @@
+[
+  {
+    "username": "caretaker1",
+    "password": "1234",
+    "role": "caretaker"
+  },
+  {
+    "username": "family1",
+    "password": "1234",
+    "role": "family"
+  },
+  {
+    "id": 1772984653801,
+    "username": "caretaker2",
+    "password": "caretaker1234",
+    "role": "caretaker"
+  },
+  {
+    "id": 1772984884527,
+    "username": "testuser",
+    "password": "123456",
+    "role": "caretaker"
+  }
+]

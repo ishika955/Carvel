@@ -106,6 +106,7 @@ async function loadPatients() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
     const data = await res.json();
+
     //const list = Array.isArray(data) ? data : (data.patients || []);
     const list = data.data || [];
 
@@ -135,6 +136,19 @@ setText('ct-statPat', patientsToday.size);
 setText('ct-statMeds', `${medsGiven}/${medsTotal}`);
 setText('ct-statAlerts', 0);
 setText('ct-statAppt', appointments);
+
+    const list = Array.isArray(data) ? data : (data.patients || []);
+
+    const allMeds   = list.flatMap(p => (p.medications || []).map(m => ({ ...m, patient: p.name })));
+    const given     = allMeds.filter(m => m.status === 'given').length;
+    const alerts    = list.filter(p => p.alert).length;
+    const appts     = list.filter(p => p.appointment).length;
+
+    setText('ct-statPat',    list.length);
+    setText('ct-statMeds',   `${given}/${allMeds.length}`);
+    setText('ct-statAlerts', alerts);
+    setText('ct-statAppt',   appts);
+
 
     // timeline
     const tl = document.getElementById('ct-timeline');
@@ -231,6 +245,7 @@ async function loadFamilyPatients() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
     const data = await res.json();
+
     const list = data.data || [];
 
     const vitals = list.filter(e => e.type === "vitals");
@@ -299,6 +314,51 @@ setText('fam-statStatus', status);
   } catch (err) {
     console.error(err);
   }
+
+    const list = Array.isArray(data) ? data : (data.patients || []);
+    const p    = list[0];
+    if (!p) return;
+
+    const v = p.vitals || (p.vitalLogs?.[0]) || {};
+    setText('fam-statStatus',  p.status || 'Stable');
+    setText('fam-statCheckin', v.time ? v.time.slice(0,5) : 'Today');
+    setText('fam-temp',   v.temperature || v.temp || '—');
+    setText('fam-pulse',  v.pulse || '—');
+    setText('fam-bp',     v.bloodPressure || v.bp || '—');
+    setText('fam-o2',     v.oxygen || v.o2 || '—');
+    setText('fam-vNotes', v.notes || 'No notes recorded');
+
+    // meds summary
+    const meds   = list.flatMap(pt => (pt.medications || []).map(m => ({ ...m, patient: pt.name })));
+    const given  = meds.filter(m => m.status === 'given').length;
+    setText('fam-statMeds', `${given}/${meds.length}`);
+
+    const medEl = document.getElementById('fam-medSummary');
+    if (medEl) medEl.innerHTML = meds.length
+      ? meds.map(m => `
+          <div class="med-row">
+            <div class="dot ${m.status||'pending'}"></div>
+            <div class="med-info"><div class="med-name">${m.name||m.medication||'Unknown'}</div></div>
+            <div class="med-time">${m.time||''}</div>
+            <div class="tag ${m.status||'pending'}">${m.status||'pending'}</div>
+          </div>`).join('')
+      : `<div class="empty">No medication records</div>`;
+
+    // vitals history
+    const vh = document.getElementById('fam-vitalHistory');
+    if (vh) vh.innerHTML = (p.vitalLogs||[]).length
+      ? p.vitalLogs.map(vl => `
+          <div class="rpt-row">
+            <div class="rpt-icon">📊</div>
+            <div style="flex:1">
+              <div class="rpt-name">Vitals Record</div>
+              <div class="rpt-by">Temp: ${vl.temperature||'—'} · Pulse: ${vl.pulse||'—'}</div>
+            </div>
+            <div class="rpt-date">${vl.date || vl.time || 'Recent'}</div>
+          </div>`).join('')
+      : `<div class="empty">No vitals history</div>`;
+  } catch {}
+
 }
 
 // ── DOCTOR ────────────────────────────────────────────
@@ -342,6 +402,7 @@ async function loadDoctorData() {
 
 // ── SUBMIT: Vitals ────────────────────────────────────
 async function submitVitals() {
+
 
   const body = {
     type: 'vitals',
@@ -407,6 +468,26 @@ async function submitVitals() {
   });
 
 }
+
+  const body = {
+    type:'vitals',
+    patientName:   val('vPatient'),
+    date:          val('vDate'),
+    temperature:   val('vTemp'),
+    pulse:         val('vPulse'),
+    bloodPressure: val('vBP'),
+    oxygen:        val('vO2'),
+    notes:         val('vNotes'),
+    loggedBy: username
+  };
+  if (!body.patientName) { toast('Please enter patient name', true); return; }
+  await postTo('/patients', body, 'Vitals saved', () => {
+    clearForm(['vPatient','vTemp','vPulse','vBP','vO2','vNotes']);
+    loadMedSchedule();
+  });
+}
+
+
 // ── SUBMIT: Medication ────────────────────────────────
 async function submitMedication() {
   const body = {
@@ -419,8 +500,12 @@ async function submitMedication() {
   if (!body.patientName || !body.medication) { toast('Fill in patient and medication', true); return; }
   await postTo('/patients', body, 'Medication logged', () => {
     clearForm(['mPatient','mName','mDose','mTime','mNotes']);
+
    loadPatients();
 loadMedSchedule();
+
+    loadMedSchedule();
+
   });
 }
 
@@ -474,4 +559,8 @@ function toast(msg, isErr=false) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+
 function logout() { sessionStorage.clear(); window.location.href='login.html'; }
+
+function logout() { sessionStorage.clear(); window.location.href='login.html'; }
+
