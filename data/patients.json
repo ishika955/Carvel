@@ -42,5 +42,126 @@
     "status": "given",
     "notes": "h",
     "loggedBy": "caretaker2"
+
+  },
+  {
+    "id": 5,
+    "type": "vitals",
+    "patientName": "Ramesh Sharma",
+    "date": "2026-03-08T22:18",
+    "temperature": "100",
+    "pulse": "67",
+    "bloodPressure": "120/80",
+    "oxygen": "78",
+    "notes": "no",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 6,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-03-08T22:18",
+    "temperature": "100",
+    "pulse": "73",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "no",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 7,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-03-08T22:46",
+    "temperature": "103",
+    "pulse": "84",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "fever",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 8,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-03-08T22:47",
+    "temperature": "104",
+    "pulse": "72",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "high fever",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 9,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-03-08T22:47",
+    "temperature": "103",
+    "pulse": "72",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 10,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-03-08T22:53",
+    "temperature": "104",
+    "pulse": "78",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "no",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 11,
+    "type": "medication",
+    "patientName": "Ishika",
+    "medication": "Crocin",
+    "dosage": "500 mg",
+    "time": "09:00",
+    "status": "given",
+    "notes": "taken",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 12,
+    "type": "vitals",
+    "patientName": "Ishika Singla",
+    "date": "2026-03-08T23:06",
+    "temperature": "104",
+    "pulse": "72",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "high fever",
+    "loggedBy": "family1"
+  },
+  {
+    "id": 13,
+    "type": "medication",
+    "patientName": "Ishika Singla",
+    "medication": "dolo",
+    "dosage": "500 mg",
+    "time": "10:00",
+    "status": "given",
+    "notes": "med given for fever",
+    "loggedBy": "family1"
+  },
+  {
+    "id": 14,
+    "type": "appointment",
+    "patientName": "Ishika Singla",
+    "doctor": "Dr. X",
+    "date": "2026-03-09",
+    "time": "01:00",
+    "reason": "high fever",
+    "bookedBy": "family1"
   }
 ]
+
+  }
+]
+
