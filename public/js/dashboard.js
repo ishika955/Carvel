@@ -7,7 +7,7 @@ const authHeader = () => ({
   'Content-Type': 'application/json',
   ...(token ? { Authorization: `Bearer ${token}` } : {})
 });
-//dc
+
 // ── NAV CONFIG ────────────────────────────────────────
 const NAV = {
   caretaker: [
