@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(logger); 
 app.use("/auth", authRoutes);
-app.use("/patients", authMiddleware, patientRoutes);
+app.use("/patients", patientRoutes);
 app.use("/alerts", alertRoutes);
 
 // Serve static files

@@ -1,1 +1,46 @@
-[]
+[
+  {
+    "id": 1,
+    "type": "vitals",
+    "patientName": "patient 1",
+    "date": "2026-03-08T21:40",
+    "temperature": "98",
+    "pulse": "72",
+    "bloodPressure": "120",
+    "oxygen": "98",
+    "notes": "h",
+    "loggedBy": "caretaker2"
+  },
+  {
+    "id": 2,
+    "type": "medication",
+    "patientName": "patient1",
+    "medication": "hbg",
+    "dosage": "900",
+    "time": "16:10",
+    "status": "given",
+    "notes": "v",
+    "loggedBy": "caretaker2"
+  },
+  {
+    "id": 3,
+    "type": "appointment",
+    "patientName": "patient2",
+    "doctor": "hbh",
+    "date": "2030-06-03",
+    "time": "17:00",
+    "reason": "bvh",
+    "bookedBy": "caretaker2"
+  },
+  {
+    "id": 4,
+    "type": "medication",
+    "patientName": "patient 1",
+    "medication": "vh",
+    "dosage": "900",
+    "time": "21:00",
+    "status": "given",
+    "notes": "h",
+    "loggedBy": "caretaker2"
+  }
+]

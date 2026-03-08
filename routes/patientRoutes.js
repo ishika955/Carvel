@@ -32,43 +32,29 @@ router.get("/", async (req, res, next) => {
 // POST create patient
 router.post("/", async (req, res, next) => {
   try {
-    const { name, age } = req.body;
-
-    if (!name || age === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Name and age are required",
-      });
-    }
-
-    const ageNum = Number(age);
-    if (Number.isNaN(ageNum) || ageNum <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Age must be a valid number",
-      });
-    }
-
+    
     const patients = await readJSON(PATIENTS_FILE, []);
 
-    const nextId =
-      patients.length > 0 ? Math.max(...patients.map((p) => Number(p.id) || 0)) + 1 : 1;
-
-    const newPatient = {
-      id: nextId,
-      name: String(name).trim(),
-      age: ageNum,
+    const newEntry = {
+      id: patients.length + 1,
+      ...req.body
     };
 
-    patients.push(newPatient);
+    patients.push(newEntry);
+
     await writeJSON(PATIENTS_FILE, patients);
 
-    res.status(201).json({
+    res.json({
       success: true,
-      data: newPatient,
+      data: newEntry
     });
+
   } catch (err) {
-    next(err);
+    console.error(err);
+    res.status(500).json({
+      success:false,
+      message:"Server error"
+    });
   }
 });
 
