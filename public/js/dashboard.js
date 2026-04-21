@@ -106,17 +106,35 @@ async function loadPatients() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
     const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.patients || []);
+    //const list = Array.isArray(data) ? data : (data.patients || []);
+    const list = data.data || [];
 
-    const allMeds   = list.flatMap(p => (p.medications || []).map(m => ({ ...m, patient: p.name })));
-    const given     = allMeds.filter(m => m.status === 'given').length;
-    const alerts    = list.filter(p => p.alert).length;
-    const appts     = list.filter(p => p.appointment).length;
+    let patientsToday = new Set();
+let medsGiven = 0;
+let medsTotal = 0;
+let appointments = 0;
 
-    setText('ct-statPat',    list.length);
-    setText('ct-statMeds',   `${given}/${allMeds.length}`);
-    setText('ct-statAlerts', alerts);
-    setText('ct-statAppt',   appts);
+list.forEach(entry => {
+
+  if (entry.type === "vitals") {
+    patientsToday.add(entry.patientName);
+  }
+
+  if (entry.type === "medication") {
+    medsTotal++;
+    if (entry.status === "given") medsGiven++;
+  }
+
+  if (entry.type === "appointment") {
+    appointments++;
+  }
+
+});
+
+setText('ct-statPat', patientsToday.size);
+setText('ct-statMeds', `${medsGiven}/${medsTotal}`);
+setText('ct-statAlerts', 0);
+setText('ct-statAppt', appointments);
 
     // timeline
     const tl = document.getElementById('ct-timeline');
@@ -213,49 +231,118 @@ async function loadFamilyPatients() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
     const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.patients || []);
-    const p    = list[0];
-    if (!p) return;
+    const list = data.data || [];
 
-    const v = p.vitals || (p.vitalLogs?.[0]) || {};
-    setText('fam-statStatus',  p.status || 'Stable');
-    setText('fam-statCheckin', v.time ? v.time.slice(0,5) : 'Today');
-    setText('fam-temp',   v.temperature || v.temp || '—');
-    setText('fam-pulse',  v.pulse || '—');
-    setText('fam-bp',     v.bloodPressure || v.bp || '—');
-    setText('fam-o2',     v.oxygen || v.o2 || '—');
-    setText('fam-vNotes', v.notes || 'No notes recorded');
+    const vitals = list.filter(e => e.type === "vitals");
+    const meds   = list.filter(e => e.type === "medication");
 
-    // meds summary
-    const meds   = list.flatMap(pt => (pt.medications || []).map(m => ({ ...m, patient: pt.name })));
-    const given  = meds.filter(m => m.status === 'given').length;
+    if (!vitals.length) return;
+
+    const latest = vitals[vitals.length - 1];
+
+    // ---------- STATUS CALCULATION ----------
+   let status = "Stable";
+let alertCount = 0;
+
+if (Number(latest.temperature) >= 102) {
+  status = "Critical";
+  alertCount++;
+}
+
+else if (Number(latest.oxygen) < 90) {
+  status = "Critical";
+  alertCount++;
+}
+
+else if (Number(latest.pulse) > 120) {
+  status = "Warning";
+}
+    const statusEl = document.getElementById("fam-statStatus");
+
+    if (statusEl) {
+      statusEl.textContent = status;
+
+      statusEl.classList.remove(
+        "status-stable",
+        "status-warning",
+        "status-critical"
+      );
+
+      if (status === "Stable") {
+        statusEl.classList.add("status-stable");
+      }
+      else if (status === "Warning") {
+        statusEl.classList.add("status-warning");
+      }
+      else if (status === "Critical") {
+        statusEl.classList.add("status-critical");
+      }
+    }
+
+    // ---------- BASIC STATS ----------
+    setText('fam-statStatus', status);
+    setText('fam-statCheckin', latest.date || 'Today');
+
+    // ---------- VITALS ----------
+    setText('fam-temp',  latest.temperature || '—');
+    setText('fam-pulse', latest.pulse || '—');
+    setText('fam-bp',    latest.bloodPressure || '—');
+    setText('fam-o2',    latest.oxygen || '—');
+    setText('fam-vNotes', latest.notes || 'No notes recorded');
+
+    // ---------- MEDICATION SUMMARY ----------
+    const given = meds.filter(m => m.status === "given").length;
     setText('fam-statMeds', `${given}/${meds.length}`);
 
     const medEl = document.getElementById('fam-medSummary');
-    if (medEl) medEl.innerHTML = meds.length
-      ? meds.map(m => `
-          <div class="med-row">
-            <div class="dot ${m.status||'pending'}"></div>
-            <div class="med-info"><div class="med-name">${m.name||m.medication||'Unknown'}</div></div>
-            <div class="med-time">${m.time||''}</div>
-            <div class="tag ${m.status||'pending'}">${m.status||'pending'}</div>
-          </div>`).join('')
-      : `<div class="empty">No medication records</div>`;
 
-    // vitals history
-    const vh = document.getElementById('fam-vitalHistory');
-    if (vh) vh.innerHTML = (p.vitalLogs||[]).length
-      ? p.vitalLogs.map(vl => `
-          <div class="rpt-row">
-            <div class="rpt-icon">📊</div>
-            <div style="flex:1">
-              <div class="rpt-name">Vitals Record</div>
-              <div class="rpt-by">Temp: ${vl.temperature||'—'} · Pulse: ${vl.pulse||'—'}</div>
+    if (medEl) {
+      medEl.innerHTML = meds.length
+        ? meds.map(m => `
+          <div class="med-row">
+            <div class="dot ${m.status || 'pending'}"></div>
+
+            <div class="med-info">
+              <div class="med-name">${m.medication}</div>
             </div>
-            <div class="rpt-date">${vl.date || vl.time || 'Recent'}</div>
-          </div>`).join('')
-      : `<div class="empty">No vitals history</div>`;
-  } catch {}
+
+            <div class="med-time">${m.time}</div>
+
+            <div class="tag ${m.status || 'pending'}">
+              ${m.status || 'pending'}
+            </div>
+          </div>
+        `).join('')
+        : `<div class="empty">No medication records</div>`;
+    }
+
+    // ---------- VITAL HISTORY ----------
+    const vh = document.getElementById('fam-vitalHistory');
+
+    if (vh) {
+      vh.innerHTML = vitals.length
+        ? vitals.slice(-5).reverse().map(v => `
+          <div class="rpt-row">
+
+            <div class="rpt-icon">📊</div>
+
+            <div style="flex:1">
+              <div class="rpt-name">${v.patientName || "Patient"}</div>
+              <div class="rpt-by">
+                Temp: ${v.temperature} · Pulse: ${v.pulse}
+              </div>
+            </div>
+
+            <div class="rpt-date">${v.date || "Today"}</div>
+
+          </div>
+        `).join('')
+        : `<div class="empty">No vitals history</div>`;
+    }
+
+  } catch (err) {
+    console.error("Family dashboard error:", err);
+  }
 }
 
 // ── DOCTOR ────────────────────────────────────────────
@@ -299,23 +386,74 @@ async function loadDoctorData() {
 
 // ── SUBMIT: Vitals ────────────────────────────────────
 async function submitVitals() {
+
   const body = {
-    type:'vitals',
-    patientName:   val('vPatient'),
-    date:          val('vDate'),
-    temperature:   val('vTemp'),
-    pulse:         val('vPulse'),
+    type: 'vitals',
+    patientName: val('vPatient'),
+    date: val('vDate'),
+    temperature: val('vTemp'),
+    pulse: val('vPulse'),
     bloodPressure: val('vBP'),
-    oxygen:        val('vO2'),
-    notes:         val('vNotes'),
+    oxygen: val('vO2'),
+    notes: val('vNotes'),
     loggedBy: username
   };
-  if (!body.patientName) { toast('Please enter patient name', true); return; }
-  await postTo('/patients', body, 'Vitals saved', () => {
+
+  if (!body.patientName) {
+    toast('Please enter patient name', true);
+    return;
+  }
+
+  await postTo('/patients', body, 'Vitals saved', async () => {
+
+    try {
+
+      // 🚨 HIGH FEVER ALERT
+      if (Number(body.temperature) >= 102) {
+        await fetch('/alerts', {
+          method: 'POST',
+          headers: authHeader(),
+          body: JSON.stringify({
+            type: "emergency",
+            title: "High Fever",
+            description: `${body.patientName} has high fever (${body.temperature}°F)`,
+            createdAt: new Date().toISOString(),
+            read: false
+          })
+        });
+      }
+
+      // 🚨 LOW OXYGEN ALERT
+      if (Number(body.oxygen) < 90) {
+        await fetch('/alerts', {
+          method: 'POST',
+          headers: authHeader(),
+          body: JSON.stringify({
+            type: "emergency",
+            title: "Low Oxygen Level",
+            description: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
+            createdAt: new Date().toISOString(),
+            read: false
+          })
+        });
+      }
+
+    } catch (err) {
+      console.error("Alert creation failed:", err);
+    }
+
     clearForm(['vPatient','vTemp','vPulse','vBP','vO2','vNotes']);
+
+    // refresh dashboard
+    loadPatients();
     loadMedSchedule();
+
   });
+
 }
+
+
+
 
 // ── SUBMIT: Medication ────────────────────────────────
 async function submitMedication() {
@@ -329,7 +467,8 @@ async function submitMedication() {
   if (!body.patientName || !body.medication) { toast('Fill in patient and medication', true); return; }
   await postTo('/patients', body, 'Medication logged', () => {
     clearForm(['mPatient','mName','mDose','mTime','mNotes']);
-    loadMedSchedule();
+   loadPatients();
+loadMedSchedule();
   });
 }
 
@@ -383,4 +522,4 @@ function toast(msg, isErr=false) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-function logout() { sessionStorage.clear(); window.location.href='login.html'; }
+function logout() { sessionStorage.clear(); window.location.href='login.html'; }   

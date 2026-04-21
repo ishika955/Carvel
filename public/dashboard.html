@@ -301,6 +301,27 @@
       .stats.s4{grid-template-columns:repeat(2,1fr);}
       .g2,.g3,.g13,.g31{grid-template-columns:1fr;}
     }
+
+    .status {
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.status.stable {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.critical {
+  background: #f8d7da;
+  color: #721c24;
+}
   </style>
 </head>
 <body>
@@ -521,7 +542,7 @@
         </div>
         <div class="stat">
           <div class="stat-lbl">Active Alerts</div>
-          <div class="stat-val" id="fam-statAlerts">—</div>
+          <div class="stat-val" id="fam-statAlerts"></div>
           <div class="stat-sub">Unread</div>
         </div>
         <div class="stat">
