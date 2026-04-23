@@ -30,6 +30,10 @@ if (!allowedTypes.includes(req.file.mimetype)) {
     // upload to cloudinary
     const result = await cloudinary.uploader.upload(req.file.path);
 
+
+    const fs = require("fs");
+fs.unlinkSync(req.file.path);
+
     // update user directly (clean & safe)
     const updatedUser = await User.findByIdAndUpdate(
       userId,
