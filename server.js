@@ -6,7 +6,7 @@ const path = require("path");
 
 const connectDB = require("./config/db");
 
-connectDB();
+
 
 const authRoutes = require("./routes/authRoutes");
 const patientRoutes = require("./routes/patientRoutes");
@@ -18,6 +18,8 @@ const authMiddleware = require("./middleware/authMiddleware");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
+connectDB();
+
 const PORT = 3000;
 
 // Body parser middleware
