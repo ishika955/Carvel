@@ -1,63 +1,80 @@
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
-const path = require("path");
+const User = require("../models/User");
 
-// SIGNUP ROUTE
-router.post("/register", (req, res) => {
-  const { username, password, role } = req.body;
+// REGISTER
+const bcrypt = require("bcrypt");
 
-  const usersPath = path.join(__dirname, "../data/users.json");
-  const users = JSON.parse(fs.readFileSync(usersPath, "utf-8"));
+router.post("/register", async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
 
-  // check if user already exists
-  const existingUser = users.find(u => u.username === username);
+    const existingUser = await User.findOne({ username });
 
-  if (existingUser) {
-    return res.status(400).json({
-      success: false,
-      message: "Username already exists"
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Username already exists"
+      });
+    }
+
+    // 🔥 PUT HASHING HERE
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      username,
+      password: hashedPassword,
+      role
     });
+
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.message });
   }
-
-  const newUser = {
-    id: Date.now(),
-    username,
-    password,
-    role
-  };
-
-  users.push(newUser);
-
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-  res.json({
-    success: true,
-    message: "User registered successfully"
-  });
 });
 
 
-// LOGIN ROUTE
-router.post("/login", (req, res) => {
-  const { username, password } = req.body;
+// LOGIN
 
-  const usersPath = path.join(__dirname, "../data/users.json");
-  const users = JSON.parse(fs.readFileSync(usersPath, "utf-8"));
+router.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
 
-  const user = users.find(u => u.username === username && u.password === password);
+    const user = await User.findOne({ username });
 
-  if (user) {
-    res.status(200).json({
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password"
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password"
+      });
+    }
+
+    res.json({
       success: true,
+      userId: user._id,
+      username: user.username,
       role: user.role,
-      username: user.username
+      profilePic: user.profilePic
     });
-  } else {
-    res.status(401).json({
-      success: false,
-      message: "Invalid username or password"
-    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
