@@ -21,5 +21,38 @@
     "status": "given",
     "notes": "given due to high fever",
     "loggedBy": "caretaker1"
+  },
+  {
+    "id": 3,
+    "type": "vitals",
+    "patientName": "ishita",
+    "date": "2026-04-23T18:24",
+    "temperature": "98.6",
+    "pulse": "34",
+    "bloodPressure": "120/47",
+    "oxygen": "98",
+    "notes": "no new observations",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 4,
+    "type": "medication",
+    "patientName": "ishita",
+    "medication": "metaformin",
+    "dosage": "200",
+    "time": "03:23",
+    "status": "missed",
+    "notes": "no notes",
+    "loggedBy": "caretaker1"
+  },
+  {
+    "id": 5,
+    "type": "appointment",
+    "patientName": "ishita",
+    "doctor": "ravi kumar",
+    "date": "2024-01-22",
+    "time": "03:23",
+    "reason": "blood pressure high",
+    "bookedBy": "caretaker1"
   }
 ]
