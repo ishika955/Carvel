@@ -2,166 +2,57 @@
   {
     "id": 1,
     "type": "vitals",
-    "patientName": "patient 1",
-    "date": "2026-03-08T21:40",
-    "temperature": "98",
+    "patientName": "Ishika",
+    "date": "2026-03-09T16:02",
+    "temperature": "104",
     "pulse": "72",
-    "bloodPressure": "120",
+    "bloodPressure": "120/80",
     "oxygen": "98",
-    "notes": "h",
-    "loggedBy": "caretaker2"
+    "notes": "high fever",
+    "loggedBy": "caretaker1"
   },
   {
     "id": 2,
     "type": "medication",
-    "patientName": "patient1",
-    "medication": "hbg",
-    "dosage": "900",
-    "time": "16:10",
+    "patientName": "Ishika",
+    "medication": "Dolo",
+    "dosage": "500mg",
+    "time": "09:00",
     "status": "given",
-    "notes": "v",
-    "loggedBy": "caretaker2"
+    "notes": "given due to high fever",
+    "loggedBy": "caretaker1"
   },
   {
     "id": 3,
-    "type": "appointment",
-    "patientName": "patient2",
-    "doctor": "hbh",
-    "date": "2030-06-03",
-    "time": "17:00",
-    "reason": "bvh",
-    "bookedBy": "caretaker2"
+    "type": "vitals",
+    "patientName": "ishita",
+    "date": "2026-04-23T18:24",
+    "temperature": "98.6",
+    "pulse": "34",
+    "bloodPressure": "120/47",
+    "oxygen": "98",
+    "notes": "no new observations",
+    "loggedBy": "caretaker1"
   },
   {
     "id": 4,
     "type": "medication",
-    "patientName": "patient 1",
-    "medication": "vh",
-    "dosage": "900",
-    "time": "21:00",
-    "status": "given",
-    "notes": "h",
-    "loggedBy": "caretaker2"
-
+    "patientName": "ishita",
+    "medication": "metaformin",
+    "dosage": "200",
+    "time": "03:23",
+    "status": "missed",
+    "notes": "no notes",
+    "loggedBy": "caretaker1"
   },
   {
     "id": 5,
-    "type": "vitals",
-    "patientName": "Ramesh Sharma",
-    "date": "2026-03-08T22:18",
-    "temperature": "100",
-    "pulse": "67",
-    "bloodPressure": "120/80",
-    "oxygen": "78",
-    "notes": "no",
-    "loggedBy": "caretaker1"
-  },
-  {
-    "id": 6,
-    "type": "vitals",
-    "patientName": "Ishika",
-    "date": "2026-03-08T22:18",
-    "temperature": "100",
-    "pulse": "73",
-    "bloodPressure": "120/80",
-    "oxygen": "98",
-    "notes": "no",
-    "loggedBy": "caretaker1"
-  },
-  {
-    "id": 7,
-    "type": "vitals",
-    "patientName": "Ishika",
-    "date": "2026-03-08T22:46",
-    "temperature": "103",
-    "pulse": "84",
-    "bloodPressure": "120/80",
-    "oxygen": "98",
-    "notes": "fever",
-    "loggedBy": "caretaker1"
-  },
-  {
-    "id": 8,
-    "type": "vitals",
-    "patientName": "Ishika",
-    "date": "2026-03-08T22:47",
-    "temperature": "104",
-    "pulse": "72",
-    "bloodPressure": "120/80",
-    "oxygen": "98",
-    "notes": "high fever",
-    "loggedBy": "caretaker1"
-  },
-  {
-    "id": 9,
-    "type": "vitals",
-    "patientName": "Ishika",
-    "date": "2026-03-08T22:47",
-    "temperature": "103",
-    "pulse": "72",
-    "bloodPressure": "120/80",
-    "oxygen": "98",
-    "notes": "",
-    "loggedBy": "caretaker1"
-  },
-  {
-    "id": 10,
-    "type": "vitals",
-    "patientName": "Ishika",
-    "date": "2026-03-08T22:53",
-    "temperature": "104",
-    "pulse": "78",
-    "bloodPressure": "120/80",
-    "oxygen": "98",
-    "notes": "no",
-    "loggedBy": "caretaker1"
-  },
-  {
-    "id": 11,
-    "type": "medication",
-    "patientName": "Ishika",
-    "medication": "Crocin",
-    "dosage": "500 mg",
-    "time": "09:00",
-    "status": "given",
-    "notes": "taken",
-    "loggedBy": "caretaker1"
-  },
-  {
-    "id": 12,
-    "type": "vitals",
-    "patientName": "Ishika Singla",
-    "date": "2026-03-08T23:06",
-    "temperature": "104",
-    "pulse": "72",
-    "bloodPressure": "120/80",
-    "oxygen": "98",
-    "notes": "high fever",
-    "loggedBy": "family1"
-  },
-  {
-    "id": 13,
-    "type": "medication",
-    "patientName": "Ishika Singla",
-    "medication": "dolo",
-    "dosage": "500 mg",
-    "time": "10:00",
-    "status": "given",
-    "notes": "med given for fever",
-    "loggedBy": "family1"
-  },
-  {
-    "id": 14,
     "type": "appointment",
-    "patientName": "Ishika Singla",
-    "doctor": "Dr. X",
-    "date": "2026-03-09",
-    "time": "01:00",
-    "reason": "high fever",
-    "bookedBy": "family1"
+    "patientName": "ishita",
+    "doctor": "ravi kumar",
+    "date": "2024-01-22",
+    "time": "03:23",
+    "reason": "blood pressure high",
+    "bookedBy": "caretaker1"
   }
 ]
-
-  }
-]
-
