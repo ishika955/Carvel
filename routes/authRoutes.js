@@ -1,16 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // REGISTER
-const bcrypt = require("bcrypt");
-
 router.post("/register", async (req, res) => {
   try {
     const { username, password, role } = req.body;
 
     const existingUser = await User.findOne({ username });
-
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -18,7 +17,6 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // 🔥 PUT HASHING HERE
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -39,15 +37,12 @@ router.post("/register", async (req, res) => {
   }
 });
 
-
 // LOGIN
-
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
     const user = await User.findOne({ username });
-
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -56,7 +51,6 @@ router.post("/login", async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -64,8 +58,16 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // JWT token generate karo
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     res.json({
       success: true,
+      token,
       userId: user._id,
       username: user.username,
       role: user.role,

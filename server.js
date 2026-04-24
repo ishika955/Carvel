@@ -28,10 +28,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(logger); 
 
 app.use("/auth", authRoutes);
-app.use("/patients", patientRoutes);
-app.use("/alerts", alertRoutes);
-app.use("/upload", uploadRoutes);
-
+app.use("/patients", authMiddleware, patientRoutes);
+app.use("/alerts", authMiddleware, alertRoutes);
+app.use("/upload", authMiddleware, uploadRoutes);
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
