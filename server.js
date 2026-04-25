@@ -1,7 +1,18 @@
 // server configuration
 
+
+
+
+
+
+
+
+
+
+
 require("dotenv").config();
 const express = require("express");
+
 const path = require("path");
 
 const connectDB = require("./config/db");
@@ -19,6 +30,16 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 connectDB();
+const session = require("express-session");
+const passport = require("./config/passport");
+
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 const PORT = 3000;
 

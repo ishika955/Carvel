@@ -54,5 +54,17 @@
     "time": "03:23",
     "reason": "blood pressure high",
     "bookedBy": "caretaker1"
+  },
+  {
+    "id": 6,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-04-25T13:01",
+    "temperature": "98.6",
+    "pulse": "67",
+    "bloodPressure": "120/80",
+    "oxygen": "44",
+    "notes": "no",
+    "loggedBy": "Ishu"
   }
 ]
