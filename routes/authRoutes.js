@@ -8,7 +8,7 @@ const passport = require("passport");
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { username, password, role } = req.body;
+    const { username, password, role, notifyEmail, notifyPhone } = req.body;
 
     const existingUser = await User.findOne({ username });
     if (existingUser) {
@@ -23,7 +23,9 @@ router.post("/register", async (req, res) => {
     const user = await User.create({
       username,
       password: hashedPassword,
-      role
+      role,
+      notifyEmail: notifyEmail || null,
+      notifyPhone: notifyPhone || null
     });
 
     res.status(201).json({
@@ -59,7 +61,6 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // JWT token generate karo
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -72,7 +73,9 @@ router.post("/login", async (req, res) => {
       userId: user._id,
       username: user.username,
       role: user.role,
-      profilePic: user.profilePic
+      profilePic: user.profilePic,
+      notifyEmail: user.notifyEmail,
+      notifyPhone: user.notifyPhone
     });
 
   } catch (err) {
@@ -80,8 +83,6 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-
 
 // Google OAuth - initiate login
 router.get("/google", passport.authenticate("google", {
@@ -97,7 +98,6 @@ router.get("/google/callback",
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    // Redirect to dashboard with token
     res.redirect(`/dashboard.html?token=${token}`);
   }
 );

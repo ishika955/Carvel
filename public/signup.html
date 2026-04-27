@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carvèl — Create Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --olive-dark: #353b2e; --olive: #4a5240; --cream: #f5f0e6;
+      --cream-dark: #ede7d9; --white: #faf8f3;
+      --text-dark: #2a2a22; --text-muted: #7a7a68;
+      --accent: #c4a96b; --error: #c0614a; --success: #5a8f6a;
+    }
+    body { font-family: 'Jost', sans-serif; background: var(--olive-dark); min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+    .left-panel { background: var(--olive-dark); display: flex; flex-direction: column; justify-content: space-between; padding: 2.5rem 3rem; position: relative; overflow: hidden; }
+    .left-panel::before { content: ''; position: absolute; top: 15%; left: -5%; width: 200px; height: 200px; background-image: radial-gradient(circle, rgba(196,169,107,0.2) 1.5px, transparent 1.5px); background-size: 14px 14px; pointer-events: none; }
+    .logo { text-decoration: none; display: flex; align-items: center; gap: 0.9rem; position: relative; z-index: 1; }
+    .logo-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 400; font-style: italic; color: var(--cream); letter-spacing: 0.2em; text-transform: uppercase; }
+    .logo-tagline { font-size: 0.48rem; font-weight: 300; color: var(--accent); letter-spacing: 0.32em; text-transform: uppercase; margin-top: 0.15rem; }
+    .left-content { position: relative; z-index: 1; }
+    .left-eyebrow { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.6rem; }
+    .left-eyebrow::before { content: ''; width: 1.5rem; height: 1px; background: var(--accent); }
+    .left-content h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3vw, 3rem); font-weight: 400; color: var(--cream); line-height: 1.15; margin-bottom: 1.25rem; }
+    .left-content h2 em { font-style: italic; color: var(--accent); }
+    .left-content p { font-size: 0.88rem; color: rgba(245,240,230,0.5); line-height: 1.8; max-width: 340px; }
+    .left-footer { font-size: 0.72rem; color: rgba(245,240,230,0.25); letter-spacing: 0.06em; position: relative; z-index: 1; }
+    .right-panel { background: var(--white); display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; overflow-y: auto; }
+    .signup-box { width: 100%; max-width: 420px; animation: fadeUp 0.7s ease both; }
+    .signup-header { margin-bottom: 2rem; }
+    .signup-header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; font-style: italic; color: var(--text-dark); margin-bottom: 0.4rem; }
+    .signup-header p { font-size: 0.85rem; color: var(--text-muted); }
+    .role-tabs { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.5rem; margin-bottom: 1.5rem; }
+    .role-tab { padding: 0.65rem 0.5rem; border-radius: 0.5rem; border: 1.5px solid var(--cream-dark); background: transparent; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 0.78rem; color: var(--text-muted); text-align: center; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+    .role-tab:hover { border-color: var(--accent); color: var(--text-dark); }
+    .role-tab.active { border-color: var(--olive-dark); background: var(--olive-dark); color: var(--cream); }
+    .role-tab-icon { font-size: 1.1rem; }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-label { display: block; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .form-label span { color: var(--error); margin-left: 2px; }
+    .form-input { width: 100%; padding: 0.85rem 1rem; border: 1.5px solid var(--cream-dark); border-radius: 0.5rem; background: var(--white); font-family: 'Jost', sans-serif; font-size: 0.92rem; color: var(--text-dark); transition: border-color 0.2s; outline: none; }
+    .form-input:focus { border-color: var(--olive); box-shadow: 0 0 0 3px rgba(74,82,64,0.08); }
+    .form-input::placeholder { color: #bbb; }
+    .password-wrap { position: relative; }
+    .toggle-pw { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--text-muted); padding: 0; }
+    .error-msg { display: none; font-size: 0.78rem; color: var(--error); margin-top: 0.4rem; }
+    .error-msg.visible { display: block; }
+    .success-msg { display: none; font-size: 0.82rem; color: var(--success); background: rgba(90,143,106,0.1); border: 1px solid rgba(90,143,106,0.3); border-radius: 0.4rem; padding: 0.75rem 1rem; margin-bottom: 1rem; text-align: center; }
+    .success-msg.visible { display: block; }
+    .family-fields { display: none; }
+    .family-fields.visible { display: block; }
+    .family-fields-header { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--cream-dark); display: flex; align-items: center; gap: 0.5rem; }
+    .btn-submit { width: 100%; padding: 0.95rem; background: var(--olive-dark); color: var(--cream); border: none; border-radius: 0.5rem; font-family: 'Jost', sans-serif; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.06em; cursor: pointer; margin-top: 0.5rem; transition: background 0.2s, transform 0.15s; position: relative; }
+    .btn-submit:hover { background: var(--olive); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(245,240,230,0.3); border-top-color: var(--cream); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto; }
+    .btn-submit.loading .btn-text { display: none; }
+    .btn-submit.loading .btn-spinner { display: block; }
+    .divider { display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0; color: var(--text-muted); font-size: 0.78rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--cream-dark); }
+    .btn-google { display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; padding: 0.85rem; border: 1.5px solid var(--cream-dark); border-radius: 0.5rem; background: var(--white); font-family: 'Jost', sans-serif; font-size: 0.9rem; font-weight: 500; color: var(--text-dark); text-decoration: none; transition: border-color 0.2s; margin-bottom: 0.5rem; }
+    .btn-google:hover { border-color: var(--olive); }
+    .login-footer { text-align: center; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted); }
+    .login-footer a { color: var(--olive); text-decoration: none; font-weight: 500; }
+    .login-footer a:hover { text-decoration: underline; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 768px) { body { grid-template-columns: 1fr; } .left-panel { display: none; } .right-panel { background: var(--olive-dark); } .signup-box { background: var(--white); border-radius: 1.25rem; padding: 2rem; } }
+  </style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left-panel">
+  <a href="index.html" class="logo">
+    <div>
+      <div class="logo-name">Carvèl</div>
+      <div class="logo-tagline">Elderly Care</div>
+    </div>
+  </a>
+  <div class="left-content">
+    <div class="left-eyebrow">Join us</div>
+    <h2>Begin your<br>journey of <em>care.</em></h2>
+    <p>Create your account and start managing the health and wellbeing of those you love.</p>
+  </div>
+  <div class="left-footer">© 2025 Carvèl. Elderly Care Management.</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <div class="signup-box">
+    <div class="signup-header">
+      <h1>Create account</h1>
+      <p>Select your role and fill in your details</p>
+    </div>
+
+    <!-- Role Selector -->
+    <div class="role-tabs">
+      <button class="role-tab active" data-role="caretaker" onclick="selectRole(this)">
+        <span class="role-tab-icon">🧑‍⚕️</span>
+        Caretaker
+      </button>
+      <button class="role-tab" data-role="family" onclick="selectRole(this)">
+        <span class="role-tab-icon">👨‍👩‍👧</span>
+        Family
+      </button>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-msg" id="success-msg">✓ Account created! Redirecting to login...</div>
+
+    <!-- Common Fields -->
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" id="username" class="form-input" placeholder="Choose a username" autocomplete="username"/>
+      <span class="error-msg" id="username-error"></span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="password-wrap">
+        <input type="password" id="password" class="form-input" placeholder="Create a password" autocomplete="new-password"/>
+        <button class="toggle-pw" onclick="togglePassword()" type="button">👁</button>
+      </div>
+      <span class="error-msg" id="password-error"></span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Confirm Password</label>
+      <div class="password-wrap">
+        <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat your password"/>
+      </div>
+      <span class="error-msg" id="confirm-error"></span>
+    </div>
+
+    <!-- Family-only notification fields -->
+    <div class="family-fields" id="familyFields">
+      <div class="family-fields-header">📬 Notification Details</div>
+
+      <div class="form-group">
+        <label class="form-label">Email for Alerts <span>*</span></label>
+        <input type="email" id="notifyEmail" class="form-input" placeholder="your@email.com"/>
+        <span class="error-msg" id="email-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Phone for SMS Alerts <span style="color:var(--text-muted);font-weight:300;">(optional)</span></label>
+        <input type="tel" id="notifyPhone" class="form-input" placeholder="+91 98765 43210"/>
+        <span class="error-msg" id="phone-error"></span>
+      </div>
+    </div>
+
+    <span class="error-msg" id="signup-error" style="margin-bottom:0.75rem;"></span>
+
+    <button class="btn-submit" id="signupBtn" onclick="handleSignup()">
+      <span class="btn-text">Create Account</span>
+      <div class="btn-spinner"></div>
+    </button>
+
+    <div class="divider">or</div>
+
+    <a href="/auth/google" class="btn-google">
+      <img src="https://www.google.com/favicon.ico" width="18" height="18" alt="Google"/>
+      Continue with Google
+    </a>
+
+    <div class="login-footer">
+      Already have an account? <a href="login.html">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedRole = 'caretaker';
+
+function selectRole(el) {
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  selectedRole = el.getAttribute('data-role');
+  const familyFields = document.getElementById('familyFields');
+  if (selectedRole === 'family') {
+    familyFields.classList.add('visible');
+  } else {
+    familyFields.classList.remove('visible');
+  }
+}
+
+function togglePassword() {
+  const input = document.getElementById('password');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function clearErrors() {
+  document.querySelectorAll('.error-msg').forEach(e => { e.classList.remove('visible'); e.style.display = 'none'; });
+  ['username','password','confirmPassword','notifyEmail','notifyPhone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.borderColor = '';
+  });
+}
+
+function showError(id, message) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = message; el.classList.add('visible'); el.style.display = 'block'; }
+}
+
+function markInvalid(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.borderColor = '#c0614a';
+}
+
+async function handleSignup() {
+  clearErrors();
+
+  const username    = document.getElementById('username').value.trim();
+  const password    = document.getElementById('password').value.trim();
+  const confirm     = document.getElementById('confirmPassword').value.trim();
+  const notifyEmail = document.getElementById('notifyEmail').value.trim();
+  const notifyPhone = document.getElementById('notifyPhone').value.trim();
+
+  let valid = true;
+  if (!username) { showError('username-error', 'Please enter a username'); markInvalid('username'); valid = false; }
+  if (!password) { showError('password-error', 'Please enter a password'); markInvalid('password'); valid = false; }
+  if (password && password.length < 6) { showError('password-error', 'Password must be at least 6 characters'); markInvalid('password'); valid = false; }
+  if (password !== confirm) { showError('confirm-error', 'Passwords do not match'); markInvalid('confirmPassword'); valid = false; }
+  if (selectedRole === 'family' && !notifyEmail) {
+    showError('email-error', 'Please enter an email to receive alerts');
+    markInvalid('notifyEmail');
+    valid = false;
+  }
+  if (!valid) return;
+
+  const btn = document.getElementById('signupBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    const payload = { username, password, role: selectedRole };
+    if (selectedRole === 'family') {
+      payload.notifyEmail = notifyEmail;
+      if (notifyPhone) payload.notifyPhone = notifyPhone;
+    }
+
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      document.getElementById('success-msg').classList.add('visible');
+      setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+    } else {
+      showError('signup-error', data.message || 'Registration failed. Please try again.');
+      document.getElementById('signup-error').style.display = 'block';
+    }
+
+  } catch (err) {
+    showError('signup-error', 'Unable to connect to server. Please try again.');
+    document.getElementById('signup-error').style.display = 'block';
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSignup(); });
+</script>
+</body>
+</html>

@@ -1,8 +1,17 @@
 // ── dashboard.js ──
+// Save token from URL if coming from Google OAuth
+const urlParams = new URLSearchParams(window.location.search);
+const urlToken = urlParams.get('token');
+if (urlToken) {
+  sessionStorage.setItem('token', urlToken);
+  sessionStorage.setItem('role', 'caretaker');
+  sessionStorage.setItem('username', 'User');
+  window.history.replaceState({}, document.title, '/dashboard.html');
+}
+
 const role     = sessionStorage.getItem('role')     || 'caretaker';
 const username = sessionStorage.getItem('username') || 'User';
 const token    = sessionStorage.getItem('token')    || '';
-
 const authHeader = () => ({
   'Content-Type': 'application/json',
   ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -26,12 +35,14 @@ const NAV = {
 const AVATARS = { caretaker:'🧑‍⚕️', family:'👨‍👩‍👧' };
 const ROLES   = { caretaker:'Caretaker', family:'Family Member' };
 
+// ── TOP-LEVEL chart instance (must be outside all functions) ──
+let vitalsChartInstance = null;
+
 // ── INIT ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   buildSidebar();
   setTopbar();
   loadData();
-  // open first page
   const first = NAV[role]?.[0]?.page;
   if (first) goPage(first);
 });
@@ -53,14 +64,10 @@ function buildSidebar() {
 
 // ── GO TO PAGE ───────────────────────────────────────
 function goPage(pageId, btn) {
-  // hide all pages
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
-  // show target
   const target = document.getElementById(`p-${pageId}`);
   if (target) target.classList.add('active');
 
-  // update sidebar active state
   document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
   if (btn) {
     btn.classList.add('active');
@@ -69,7 +76,6 @@ function goPage(pageId, btn) {
     if (match) match.classList.add('active');
   }
 
-  // update topbar title
   const item = (NAV[role] || []).find(n => n.page === pageId);
   if (item) document.getElementById('topSection').textContent = item.label;
 }
@@ -79,7 +85,6 @@ function setTopbar() {
   document.getElementById('topDate').textContent =
     new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-  // pre-fill datetime
   const dtInput = document.getElementById('vDate');
   if (dtInput) {
     const now = new Date();
@@ -106,39 +111,26 @@ async function loadPatients() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
     const data = await res.json();
-    //const list = Array.isArray(data) ? data : (data.patients || []);
     const list = data.data || [];
 
     let patientsToday = new Set();
-let medsGiven = 0;
-let medsTotal = 0;
-let appointments = 0;
+    let medsGiven = 0;
+    let medsTotal = 0;
+    let appointments = 0;
 
-list.forEach(entry => {
+    list.forEach(entry => {
+      if (entry.type === "vitals")     patientsToday.add(entry.patientName);
+      if (entry.type === "medication") { medsTotal++; if (entry.status === "given") medsGiven++; }
+      if (entry.type === "appointment") appointments++;
+    });
 
-  if (entry.type === "vitals") {
-    patientsToday.add(entry.patientName);
-  }
+    setText('ct-statPat',    patientsToday.size);
+    setText('ct-statMeds',   `${medsGiven}/${medsTotal}`);
+    setText('ct-statAlerts', 0);
+    setText('ct-statAppt',   appointments);
 
-  if (entry.type === "medication") {
-    medsTotal++;
-    if (entry.status === "given") medsGiven++;
-  }
-
-  if (entry.type === "appointment") {
-    appointments++;
-  }
-
-});
-
-setText('ct-statPat', patientsToday.size);
-setText('ct-statMeds', `${medsGiven}/${medsTotal}`);
-setText('ct-statAlerts', 0);
-setText('ct-statAppt', appointments);
-
-    // timeline
     const tl = document.getElementById('ct-timeline');
-    if (list.length) {
+    if (tl && list.length) {
       tl.innerHTML = list.slice(0,4).map(p => `
         <div class="tl-item">
           <div class="tl-left"><div class="tl-dot ${p.alert ? 'warn' : 'ok'}"></div><div class="tl-line"></div></div>
@@ -152,6 +144,7 @@ setText('ct-statAppt', appointments);
   } catch { setDashes(['ct-statPat','ct-statMeds','ct-statAlerts','ct-statAppt']); }
 }
 
+// ── CARETAKER: med schedule ───────────────────────────
 async function loadMedSchedule() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
@@ -190,17 +183,25 @@ async function loadAlerts() {
   try {
     const res  = await fetch('/alerts', { headers: authHeader() });
     const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.alerts || []);
+   const list = Array.isArray(data) ? data : (data.data || []);
     const unread = list.filter(a => !a.read).length;
 
-    setText('fam-statAlerts', unread);
-    setText('fam-alertBadge', `${unread} new`);
+    setText('fam-statAlerts',    unread);
+    setText('fam-alertBadge',    `${unread} new`);
     setText('fam-allAlertBadge', `${list.length} total`);
 
     if (unread > 0) {
-      setText('alertCount', unread);
-      document.getElementById('alertPill').classList.add('visible');
-    }
+  setText('alertCount', unread);
+  document.getElementById('alertPill').classList.add('visible');
+  
+  // Show popup with actual alert message
+  const latest = list.find(a => !a.read);
+  if (latest) {
+    const popup = document.getElementById('fam-popup');
+    setText('fam-popupMsg', latest.title || 'New alert!');
+    if (popup) popup.style.display = 'flex';  // ← ADD THIS
+  }
+}
 
     const icons = { emergency:'🚨', missed_medication:'💊', appointment:'📅', info:'ℹ️' };
     const html = list.length
@@ -227,6 +228,7 @@ async function loadAlerts() {
   }
 }
 
+// ── FAMILY: patients / vitals / chart ────────────────
 async function loadFamilyPatients() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
@@ -235,109 +237,165 @@ async function loadFamilyPatients() {
 
     const vitals = list.filter(e => e.type === "vitals");
     const meds   = list.filter(e => e.type === "medication");
+    const appts  = list.filter(e => e.type === "appointment");
 
     if (!vitals.length) return;
 
     const latest = vitals[vitals.length - 1];
+    const prev   = vitals.length > 1 ? vitals[vitals.length - 2] : null;
 
-    // ---------- STATUS CALCULATION ----------
-   let status = "Stable";
-let alertCount = 0;
+    // ── STATUS ──
+    let status = "Stable";
+    if (Number(latest.temperature) >= 102 || Number(latest.oxygen) < 90) status = "Critical";
+    else if (Number(latest.pulse) > 120 || Number(latest.temperature) >= 100) status = "Warning";
 
-if (Number(latest.temperature) >= 102) {
-  status = "Critical";
-  alertCount++;
-}
-
-else if (Number(latest.oxygen) < 90) {
-  status = "Critical";
-  alertCount++;
-}
-
-else if (Number(latest.pulse) > 120) {
-  status = "Warning";
-}
     const statusEl = document.getElementById("fam-statStatus");
-
     if (statusEl) {
       statusEl.textContent = status;
-
-      statusEl.classList.remove(
-        "status-stable",
-        "status-warning",
-        "status-critical"
-      );
-
-      if (status === "Stable") {
-        statusEl.classList.add("status-stable");
-      }
-      else if (status === "Warning") {
-        statusEl.classList.add("status-warning");
-      }
-      else if (status === "Critical") {
-        statusEl.classList.add("status-critical");
-      }
+      statusEl.className = '';
+      if (status === "Stable")   statusEl.style.color = "var(--green)";
+      else if (status === "Warning") statusEl.style.color = "#9a7530";
+      else statusEl.style.color = "var(--red)";
     }
 
-    // ---------- BASIC STATS ----------
-    setText('fam-statStatus', status);
-    setText('fam-statCheckin', latest.date || 'Today');
+    // ── TREND ──
+    let overallTrend = "Stable";
+    if (prev) {
+      const tempDiff = Number(latest.temperature) - Number(prev.temperature);
+      const o2Diff   = Number(latest.oxygen) - Number(prev.oxygen);
+      if (tempDiff > 1 || o2Diff < -3)       overallTrend = "Worsening";
+      else if (tempDiff < -0.5 || o2Diff > 2) overallTrend = "Improving";
+    }
+    const trendEl = document.getElementById("fam-statusTrend");
+    if (trendEl) {
+      trendEl.textContent = overallTrend;
+      trendEl.style.color = overallTrend === "Improving" ? "var(--green)" : overallTrend === "Worsening" ? "var(--red)" : "var(--muted)";
+    }
 
-    // ---------- VITALS ----------
-    setText('fam-temp',  latest.temperature || '—');
-    setText('fam-pulse', latest.pulse || '—');
-    setText('fam-bp',    latest.bloodPressure || '—');
-    setText('fam-o2',    latest.oxygen || '—');
-    setText('fam-vNotes', latest.notes || 'No notes recorded');
+    const vitalTrendEl = document.getElementById("fam-vitalTrend");
+    if (vitalTrendEl) {
+      vitalTrendEl.textContent = overallTrend;
+      vitalTrendEl.className = "badge " + (overallTrend === "Improving" ? "green" : overallTrend === "Worsening" ? "red" : "");
+    }
 
-    // ---------- MEDICATION SUMMARY ----------
+    // ── VITAL CARDS ──
+    const setVitalCard = (cardId, valId, trendId, value, prevVal, danger, warn) => {
+      setText(valId, value || "—");
+      const card = document.getElementById(cardId);
+      const tEl  = document.getElementById(trendId);
+      if (!card) return;
+      const num = Number(value);
+      if (num >= danger)     card.className = "vital-card danger";
+      else if (num >= warn)  card.className = "vital-card warning";
+      else                   card.className = "vital-card ok";
+
+      if (tEl && prevVal) {
+        const diff = num - Number(prevVal);
+        if (Math.abs(diff) < 0.5) { tEl.textContent = "Stable";       tEl.className = "vc-trend stable"; }
+        else if (diff > 0)        { tEl.textContent = "Worsening ↑";  tEl.className = "vc-trend worsening"; }
+        else                      { tEl.textContent = "Improving ↓";  tEl.className = "vc-trend improving"; }
+      }
+    };
+
+    setVitalCard("vc-temp",  "fam-temp",  "fam-tempTrend",  latest.temperature, prev?.temperature, 102, 99.5);
+    setVitalCard("vc-pulse", "fam-pulse", "fam-pulseTrend", latest.pulse,       prev?.pulse,       120, 100);
+    setVitalCard("vc-o2",    "fam-o2",    "fam-o2Trend",    latest.oxygen,      prev?.oxygen,       89,  93);
+    setText("fam-bp",        latest.bloodPressure || "—");
+    setText("fam-vNotes",    latest.notes || "No notes recorded");
+    setText("fam-statCheckin", latest.date ? new Date(latest.date).toLocaleDateString("en-IN") : "Today");
+
+    // ── CHART ──
+    const last7   = vitals.slice(-7);
+    const labels  = last7.map(v => v.date ? new Date(v.date).toLocaleDateString("en-IN", { day:"numeric", month:"short" }) : "—");
+    const temps   = last7.map(v => Number(v.temperature) || null);
+    const pulses  = last7.map(v => Number(v.pulse) || null);
+    const oxygens = last7.map(v => Number(v.oxygen) || null);
+
+    const ctx = document.getElementById("fam-vitalsChart");
+    if (ctx) {
+      if (vitalsChartInstance) vitalsChartInstance.destroy();
+      vitalsChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label:"Temperature", data:temps,   borderColor:"#c0614a", backgroundColor:"rgba(192,97,74,.08)",  tension:0.4, pointRadius:4, borderWidth:2 },
+            { label:"Pulse",       data:pulses,  borderColor:"#5a7a9f", backgroundColor:"rgba(90,122,159,.08)", tension:0.4, pointRadius:4, borderWidth:2 },
+            { label:"Oxygen",      data:oxygens, borderColor:"#5a8f6a", backgroundColor:"rgba(90,143,106,.08)", tension:0.4, pointRadius:4, borderWidth:2 },
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid:{ color:"rgba(0,0,0,.05)" }, ticks:{ font:{ size:10 } } },
+            y: { grid:{ color:"rgba(0,0,0,.05)" }, ticks:{ font:{ size:10 } } }
+          }
+        }
+      });
+    }
+
+    // ── MEDS SUMMARY ──
     const given = meds.filter(m => m.status === "given").length;
-    setText('fam-statMeds', `${given}/${meds.length}`);
+    setText("fam-statMeds", `${given}/${meds.length}`);
 
-    const medEl = document.getElementById('fam-medSummary');
-
-    if (medEl) {
-      medEl.innerHTML = meds.length
-        ? meds.map(m => `
+    const medHtml = meds.length
+      ? meds.map(m => `
           <div class="med-row">
             <div class="dot ${m.status || 'pending'}"></div>
-
-            <div class="med-info">
-              <div class="med-name">${m.medication}</div>
-            </div>
-
+            <div class="med-info"><div class="med-name">${m.medication}</div></div>
             <div class="med-time">${m.time}</div>
+            <div class="tag ${m.status || 'pending'}">${m.status || 'pending'}</div>
+          </div>`).join("")
+      : `<div class="empty">No medication records</div>`;
 
-            <div class="tag ${m.status || 'pending'}">
-              ${m.status || 'pending'}
-            </div>
-          </div>
-        `).join('')
-        : `<div class="empty">No medication records</div>`;
-    }
+    ["fam-overviewMeds", "fam-medSummary"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = medHtml;
+    });
 
-    // ---------- VITAL HISTORY ----------
-    const vh = document.getElementById('fam-vitalHistory');
-
+    // ── VITALS HISTORY ──
+    const vh = document.getElementById("fam-vitalHistory");
     if (vh) {
       vh.innerHTML = vitals.length
-        ? vitals.slice(-5).reverse().map(v => `
-          <div class="rpt-row">
-
-            <div class="rpt-icon">📊</div>
-
-            <div style="flex:1">
-              <div class="rpt-name">${v.patientName || "Patient"}</div>
-              <div class="rpt-by">
-                Temp: ${v.temperature} · Pulse: ${v.pulse}
+        ? vitals.slice(-7).reverse().map(v => `
+            <div class="rpt-row">
+              <div class="rpt-icon">📊</div>
+              <div style="flex:1">
+                <div class="rpt-name">${v.patientName || "Patient"}</div>
+                <div class="rpt-by">Temp: ${v.temperature}°F · Pulse: ${v.pulse}bpm · O₂: ${v.oxygen}%</div>
               </div>
-            </div>
-
-            <div class="rpt-date">${v.date || "Today"}</div>
-
-          </div>
-        `).join('')
+              <div class="rpt-date">${v.date ? new Date(v.date).toLocaleDateString("en-IN") : "Today"}</div>
+            </div>`).join("")
         : `<div class="empty">No vitals history</div>`;
+    }
+
+    // ── APPOINTMENTS CALENDAR ──
+    const today = new Date();
+    const upcoming = appts
+      .filter(a => a.date && new Date(a.date) >= today)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const calEl = document.getElementById("fam-appointmentCalendar");
+    if (calEl) {
+      calEl.innerHTML = upcoming.length
+        ? `<div class="appt-calendar">` + upcoming.map(a => {
+            const d = new Date(a.date);
+            return `
+              <div class="appt-item">
+                <div class="appt-date-box">
+                  <div class="appt-day">${d.getDate()}</div>
+                  <div class="appt-month">${d.toLocaleDateString("en-IN", { month:"short" })}</div>
+                </div>
+                <div class="appt-info">
+                  <div class="appt-doctor">Dr. ${a.doctor || "Doctor"}</div>
+                  <div class="appt-time">🕐 ${a.time || "Time TBD"}</div>
+                  <div class="appt-reason">${a.reason || ""}</div>
+                  <div class="appt-patient">${a.patientName || ""}</div>
+                </div>
+              </div>`;
+          }).join("") + `</div>`
+        : `<div class="empty">No upcoming appointments scheduled</div>`;
     }
 
   } catch (err) {
@@ -385,30 +443,69 @@ async function loadDoctorData() {
 }
 
 // ── SUBMIT: Vitals ────────────────────────────────────
-async function submitVitals() {
+// async function submitVitals() {
+//   const body = {
+//     type: 'vitals',
+//     patientName:   val('vPatient'),
+//     date:          val('vDate'),
+//     temperature:   val('vTemp'),
+//     pulse:         val('vPulse'),
+//     bloodPressure: val('vBP'),
+//     oxygen:        val('vO2'),
+//     notes:         val('vNotes'),
+//     loggedBy:      username
+//   };
 
+//   if (!body.patientName) { toast('Please enter patient name', true); return; }
+
+//   await postTo('/patients', body, 'Vitals saved', async () => {
+//     try {
+//       if (Number(body.temperature) >= 102) {
+//         await fetch('/alerts', {
+//           method: 'POST',
+//           headers: authHeader(),
+//           body: JSON.stringify({
+//             type: "emergency", title: "High Fever",
+//             description: `${body.patientName} has high fever (${body.temperature}°F)`,
+//             createdAt: new Date().toISOString(), read: false
+//           })
+//         });
+//       }
+//       if (Number(body.oxygen) < 90) {
+//         await fetch('/alerts', {
+//           method: 'POST',
+//           headers: authHeader(),
+//           body: JSON.stringify({
+//             type: "emergency", title: "Low Oxygen Level",
+//             description: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
+//             createdAt: new Date().toISOString(), read: false
+//           })
+//         });
+//       }
+//     } catch (err) { console.error("Alert creation failed:", err); }
+
+//     clearForm(['vPatient','vTemp','vPulse','vBP','vO2','vNotes']);
+//     loadPatients();
+//     loadMedSchedule();
+//   });
+// }
+async function submitVitals() {
   const body = {
     type: 'vitals',
-    patientName: val('vPatient'),
-    date: val('vDate'),
-    temperature: val('vTemp'),
-    pulse: val('vPulse'),
+    patientName:   val('vPatient'),
+    date:          val('vDate'),
+    temperature:   val('vTemp'),
+    pulse:         val('vPulse'),
     bloodPressure: val('vBP'),
-    oxygen: val('vO2'),
-    notes: val('vNotes'),
-    loggedBy: username
+    oxygen:        val('vO2'),
+    notes:         val('vNotes'),
+    loggedBy:      username
   };
 
-  if (!body.patientName) {
-    toast('Please enter patient name', true);
-    return;
-  }
+  if (!body.patientName) { toast('Please enter patient name', true); return; }
 
   await postTo('/patients', body, 'Vitals saved', async () => {
-
     try {
-
-      // 🚨 HIGH FEVER ALERT
       if (Number(body.temperature) >= 102) {
         await fetch('/alerts', {
           method: 'POST',
@@ -416,14 +513,15 @@ async function submitVitals() {
           body: JSON.stringify({
             type: "emergency",
             title: "High Fever",
+            message: `${body.patientName} has high fever (${body.temperature}°F)`,
             description: `${body.patientName} has high fever (${body.temperature}°F)`,
+            level: "critical",
             createdAt: new Date().toISOString(),
             read: false
           })
         });
       }
 
-      // 🚨 LOW OXYGEN ALERT
       if (Number(body.oxygen) < 90) {
         await fetch('/alerts', {
           method: 'POST',
@@ -431,54 +529,53 @@ async function submitVitals() {
           body: JSON.stringify({
             type: "emergency",
             title: "Low Oxygen Level",
+            message: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
             description: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
+            level: "critical",
             createdAt: new Date().toISOString(),
             read: false
           })
         });
       }
 
-    } catch (err) {
-      console.error("Alert creation failed:", err);
-    }
+    } catch (err) { console.error("Alert creation failed:", err); }
 
     clearForm(['vPatient','vTemp','vPulse','vBP','vO2','vNotes']);
-
-    // refresh dashboard
     loadPatients();
     loadMedSchedule();
-
   });
-
 }
-
-
-
 
 // ── SUBMIT: Medication ────────────────────────────────
 async function submitMedication() {
   const body = {
-    type:'medication',
-    patientName: val('mPatient'), medication: val('mName'),
-    dosage: val('mDose'), time: val('mTime'),
-    status: val('mStatus'), notes: val('mNotes'),
-    loggedBy: username
+    type:        'medication',
+    patientName: val('mPatient'),
+    medication:  val('mName'),
+    dosage:      val('mDose'),
+    time:        val('mTime'),
+    status:      val('mStatus'),
+    notes:       val('mNotes'),
+    loggedBy:    username
   };
   if (!body.patientName || !body.medication) { toast('Fill in patient and medication', true); return; }
   await postTo('/patients', body, 'Medication logged', () => {
     clearForm(['mPatient','mName','mDose','mTime','mNotes']);
-   loadPatients();
-loadMedSchedule();
+    loadPatients();
+    loadMedSchedule();
   });
 }
 
 // ── SUBMIT: Appointment ───────────────────────────────
 async function submitAppointment() {
   const body = {
-    type:'appointment',
-    patientName: val('aPatient'), doctor: val('aDoctor'),
-    date: val('aDate'), time: val('aTime'), reason: val('aReason'),
-    bookedBy: username
+    type:        'appointment',
+    patientName: val('aPatient'),
+    doctor:      val('aDoctor'),
+    date:        val('aDate'),
+    time:        val('aTime'),
+    reason:      val('aReason'),
+    bookedBy:    username
   };
   if (!body.patientName || !body.date) { toast('Fill in patient and date', true); return; }
   await postTo('/patients', body, 'Appointment booked', () => {
@@ -489,10 +586,13 @@ async function submitAppointment() {
 // ── SUBMIT: Prescription ──────────────────────────────
 async function submitPrescription() {
   const body = {
-    type:'prescription',
-    patientName: val('rxPatient'), medication: val('rxMed'),
-    dosage: val('rxDose'), frequency: val('rxFreq'),
-    notes: val('rxNotes'), prescribedBy: username
+    type:        'prescription',
+    patientName: val('rxPatient'),
+    medication:  val('rxMed'),
+    dosage:      val('rxDose'),
+    frequency:   val('rxFreq'),
+    notes:       val('rxNotes'),
+    prescribedBy: username
   };
   if (!body.patientName || !body.medication) { toast('Fill in patient and medication', true); return; }
   await postTo('/patients', body, 'Prescription updated', () => {
@@ -512,14 +612,14 @@ async function postTo(url, body, successMsg, onSuccess) {
 function val(id)        { return document.getElementById(id)?.value?.trim() || ''; }
 function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 function setDashes(ids) { ids.forEach(id => setText(id, '—')); }
-function clearForm(ids) { ids.forEach(id => { const el = document.getElementById(id); if(el) el.value=''; }); }
+function clearForm(ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); }
 
-function toast(msg, isErr=false) {
+function toast(msg, isErr = false) {
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
-  t.className = 'toast' + (isErr?' err':'');
+  t.className = 'toast' + (isErr ? ' err' : '');
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-function logout() { sessionStorage.clear(); window.location.href='login.html'; }   
+function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }

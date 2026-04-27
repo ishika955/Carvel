@@ -294,6 +294,48 @@
     .toast.show{transform:translateY(0);opacity:1;}
     .toast.err{background:var(--red);}
 
+    /* ═══ VITAL CARDS (Family) ═══ */
+    .vital-card {
+      background: var(--cream);
+      border: 1px solid var(--cream-dark);
+      border-radius: .6rem;
+      padding: .9rem;
+      text-align: center;
+      transition: border-color .2s;
+    }
+    .vital-card.danger { border-color: var(--red); background: rgba(196,113,74,.06); }
+    .vital-card.warning { border-color: var(--accent); background: rgba(196,169,107,.08); }
+    .vital-card.ok { border-color: var(--green); background: rgba(90,143,106,.06); }
+    .vc-icon { font-size: 1.2rem; margin-bottom: .3rem; }
+    .vc-val { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--text); line-height: 1; }
+    .vc-unit { font-size: .62rem; color: var(--muted); margin-top: .1rem; }
+    .vc-lbl { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: .3rem; }
+    .vc-trend { font-size: .68rem; margin-top: .3rem; font-weight: 500; }
+    .vc-trend.improving { color: var(--green); }
+    .vc-trend.worsening { color: var(--red); }
+    .vc-trend.stable { color: var(--muted); }
+
+    /* ═══ APPOINTMENT CALENDAR ═══ */
+    .appt-calendar { display: flex; flex-direction: column; gap: .75rem; }
+    .appt-item {
+      display: flex; align-items: stretch; gap: 0;
+      border-radius: .6rem; overflow: hidden;
+      border: 1px solid var(--cream-dark);
+    }
+    .appt-date-box {
+      background: var(--olive-dark); color: var(--cream);
+      padding: .75rem 1.1rem; text-align: center;
+      display: flex; flex-direction: column; justify-content: center;
+      min-width: 70px; flex-shrink: 0;
+    }
+    .appt-day { font-family: 'Playfair Display', serif; font-size: 1.6rem; line-height: 1; }
+    .appt-month { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); margin-top: .15rem; }
+    .appt-info { padding: .75rem 1rem; flex: 1; background: var(--white); }
+    .appt-doctor { font-size: .88rem; font-weight: 500; color: var(--text); }
+    .appt-time { font-size: .73rem; color: var(--muted); margin-top: .15rem; }
+    .appt-reason { font-size: .73rem; color: var(--muted); margin-top: .1rem; font-style: italic; }
+    .appt-patient { font-size: .68rem; color: var(--accent); margin-top: .2rem; text-transform: uppercase; letter-spacing: .06em; }
+
     @media(max-width:900px){
       :root{--sw:56px;}
       .sb-logo-name,.sb-logo-tag,.sb-uname,.sb-urole,.sb-section-label,.sb-item span:last-child{display:none;}
@@ -360,7 +402,7 @@
       <div class="topbar-date" id="topDate"></div>
     </div>
     <div class="topbar-right">
-      <div class="alert-pill" id="alertPill" onclick="goPage('alerts')">
+<div class="alert-pill" id="alertPill" onclick="goPage('fam-alerts')">
         🔔 <span id="alertCount">0</span> alerts
       </div>
     </div>
@@ -529,11 +571,19 @@
         <div class="ph-title">Family Overview</div>
         <div class="ph-sub">Real-time health status of your loved one</div>
       </div>
+
+      <!-- Popup notification -->
+      <div id="fam-popup" style="display:none;position:fixed;top:1.2rem;right:1.5rem;z-index:999;background:var(--red);color:white;padding:.85rem 1.4rem;border-radius:.6rem;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.18);align-items:center;gap:.6rem;animation:fadeUp .3s ease;">
+        <span>🚨</span><span id="fam-popupMsg">New alert!</span>
+        <button onclick="document.getElementById('fam-popup').style.display='none'" style="background:none;border:none;color:white;cursor:pointer;font-size:1rem;margin-left:.5rem;">✕</button>
+      </div>
+
+      <!-- Stats row -->
       <div class="stats s4">
         <div class="stat dark">
           <div class="stat-lbl">Overall Status</div>
           <div class="stat-val" id="fam-statStatus">—</div>
-          <div class="stat-sub">As of today</div>
+          <div class="stat-sub" id="fam-statusTrend">As of today</div>
         </div>
         <div class="stat">
           <div class="stat-lbl">Meds Taken</div>
@@ -542,32 +592,88 @@
         </div>
         <div class="stat">
           <div class="stat-lbl">Active Alerts</div>
-          <div class="stat-val" id="fam-statAlerts"></div>
+          <div class="stat-val" id="fam-statAlerts">—</div>
           <div class="stat-sub">Unread</div>
         </div>
         <div class="stat">
           <div class="stat-lbl">Last Check-in</div>
-          <div class="stat-val" id="fam-statCheckin">—</div>
+          <div class="stat-val" id="fam-statCheckin" style="font-size:1rem;">—</div>
           <div class="stat-sub">By caretaker</div>
         </div>
       </div>
-      <div class="g31">
+
+      <!-- Vitals Cards -->
+      <div class="g2" style="margin-bottom:1.25rem;">
         <div class="card">
-          <div class="card-hd"><div class="card-title">Latest Vitals</div><span class="badge">Read Only</span></div>
-          <div class="vgrid">
-            <div class="vbox"><div class="vbox-val" id="fam-temp">—</div><div class="vbox-unit">°F</div><div class="vbox-lbl">Temperature</div></div>
-            <div class="vbox"><div class="vbox-val" id="fam-pulse">—</div><div class="vbox-unit">bpm</div><div class="vbox-lbl">Pulse</div></div>
-            <div class="vbox"><div class="vbox-val" id="fam-bp">—</div><div class="vbox-unit">mmHg</div><div class="vbox-lbl">Blood Pressure</div></div>
-            <div class="vbox"><div class="vbox-val" id="fam-o2">—</div><div class="vbox-unit">%</div><div class="vbox-lbl">Oxygen Sat.</div></div>
-            <div class="vbox" style="grid-column:span 2">
-              <div style="font-size:.78rem;color:var(--muted)" id="fam-vNotes">No notes recorded</div>
-              <div class="vbox-lbl" style="margin-top:.4rem">Caretaker Notes</div>
+          <div class="card-hd">
+            <div class="card-title">Latest Vitals</div>
+            <span class="badge" id="fam-vitalTrend">— Trend</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+            <div class="vital-card" id="vc-temp">
+              <div class="vc-icon">🌡️</div>
+              <div class="vc-val" id="fam-temp">—</div>
+              <div class="vc-unit">°F</div>
+              <div class="vc-lbl">Temperature</div>
+              <div class="vc-trend" id="fam-tempTrend"></div>
+            </div>
+            <div class="vital-card" id="vc-pulse">
+              <div class="vc-icon">❤️</div>
+              <div class="vc-val" id="fam-pulse">—</div>
+              <div class="vc-unit">bpm</div>
+              <div class="vc-lbl">Pulse</div>
+              <div class="vc-trend" id="fam-pulseTrend"></div>
+            </div>
+            <div class="vital-card" id="vc-bp">
+              <div class="vc-icon">💉</div>
+              <div class="vc-val" id="fam-bp">—</div>
+              <div class="vc-unit">mmHg</div>
+              <div class="vc-lbl">Blood Pressure</div>
+              <div class="vc-trend" id="fam-bpTrend"></div>
+            </div>
+            <div class="vital-card" id="vc-o2">
+              <div class="vc-icon">🫁</div>
+              <div class="vc-val" id="fam-o2">—</div>
+              <div class="vc-unit">%</div>
+              <div class="vc-lbl">Oxygen Sat.</div>
+              <div class="vc-trend" id="fam-o2Trend"></div>
+            </div>
+          </div>
+          <div style="margin-top:.85rem;padding:.75rem;background:var(--cream);border-radius:.5rem;border:1px solid var(--cream-dark);">
+            <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.3rem;">Caretaker Notes</div>
+            <div style="font-size:.82rem;color:var(--text);" id="fam-vNotes">No notes recorded</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Vitals Chart</div>
+            <span class="badge gold">Last 7 Days</span>
+          </div>
+          <canvas id="fam-vitalsChart" height="200"></canvas>
+          <div style="display:flex;gap:1rem;margin-top:.75rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--muted);">
+              <div style="width:10px;height:3px;background:#c0614a;border-radius:2px;"></div> Temperature
+            </div>
+            <div style="display:flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--muted);">
+              <div style="width:10px;height:3px;background:#5a7a9f;border-radius:2px;"></div> Pulse
+            </div>
+            <div style="display:flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--muted);">
+              <div style="width:10px;height:3px;background:#5a8f6a;border-radius:2px;"></div> Oxygen
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Alerts + Meds -->
+      <div class="g2">
         <div class="card">
           <div class="card-hd"><div class="card-title">Recent Alerts</div><span class="badge red" id="fam-alertBadge">0 new</span></div>
           <div class="al-list" id="fam-alertList"><div class="empty">Loading alerts...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Today's Medications</div><span class="badge gold">Today</span></div>
+          <div class="med-list" id="fam-overviewMeds"><div class="empty">Loading...</div></div>
         </div>
       </div>
     </div>
@@ -590,7 +696,7 @@
     <div class="page" id="p-fam-health">
       <div class="ph">
         <div class="ph-title">Health Summary</div>
-        <div class="ph-sub">Medication and care history this week</div>
+        <div class="ph-sub">Medication, vitals history and upcoming appointments</div>
       </div>
       <div class="g2">
         <div class="card">
@@ -598,8 +704,21 @@
           <div class="med-list" id="fam-medSummary"><div class="empty">Loading...</div></div>
         </div>
         <div class="card">
-          <div class="card-hd"><div class="card-title">Vitals History</div></div>
+          <div class="card-hd"><div class="card-title">Vitals History</div><span class="badge">Last 7 Days</span></div>
           <div class="rpt-list" id="fam-vitalHistory"><div class="empty">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- Calendar-style Appointments -->
+      <div class="full">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Upcoming Appointments</div>
+            <span class="badge green">Scheduled</span>
+          </div>
+          <div id="fam-appointmentCalendar">
+            <div class="empty">No upcoming appointments</div>
+          </div>
         </div>
       </div>
     </div>
@@ -704,6 +823,7 @@
 <!-- Toast -->
 <div class="toast" id="toast">✓ <span id="toastMsg">Saved</span></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="js/dashboard.js"></script>
 </body>
 </html>

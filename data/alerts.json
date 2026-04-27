@@ -1,4 +1,3 @@
-
 [
   {
     "id": 1,
@@ -6,8 +5,49 @@
     "message": "High fever detected (104°F)",
     "level": "critical",
     "createdAt": "2026-03-08T17:23:26.895Z"
+  },
+  {
+    "id": 2,
+    "patientId": null,
+    "type": "emergency",
+    "title": "High Fever",
+    "message": "Ishika has high fever (103°F)",
+    "description": "Ishika has high fever (103°F)",
+    "level": "warning",
+    "read": false,
+    "createdAt": "2026-04-27T08:03:19.991Z"
+  },
+  {
+    "id": 3,
+    "patientId": null,
+    "type": "emergency",
+    "title": "Low Oxygen Level",
+    "message": "Ishika oxygen dropped to 44%",
+    "description": "Ishika oxygen dropped to 44%",
+    "level": "warning",
+    "read": false,
+    "createdAt": "2026-04-27T08:03:24.008Z"
+  },
+  {
+    "id": 4,
+    "patientId": null,
+    "type": "emergency",
+    "title": "High Fever",
+    "message": "Varinda has high fever (104°F)",
+    "description": "Varinda has high fever (104°F)",
+    "level": "critical",
+    "read": false,
+    "createdAt": "2026-04-27T12:34:52.353Z"
+  },
+  {
+    "id": 5,
+    "patientId": null,
+    "type": "emergency",
+    "title": "High Fever",
+    "message": "Ishika has high fever (104°F)",
+    "description": "Ishika has high fever (104°F)",
+    "level": "critical",
+    "read": false,
+    "createdAt": "2026-04-27T13:35:07.411Z"
   }
 ]
-
-[]
-

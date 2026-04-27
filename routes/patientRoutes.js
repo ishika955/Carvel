@@ -30,10 +30,12 @@ router.get("/", async (req, res, next) => {
 });
 
 // POST create patient
+
 router.post("/", async (req, res, next) => {
   try {
-    
+    console.log("POST body:", req.body);
     const patients = await readJSON(PATIENTS_FILE, []);
+    console.log("patients loaded:", patients.length);
 
     const newEntry = {
       id: patients.length + 1,
@@ -41,8 +43,8 @@ router.post("/", async (req, res, next) => {
     };
 
     patients.push(newEntry);
-
     await writeJSON(PATIENTS_FILE, patients);
+    console.log("written successfully");
 
     res.json({
       success: true,
@@ -50,14 +52,13 @@ router.post("/", async (req, res, next) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("POST ERROR:", err);
     res.status(500).json({
-      success:false,
-      message:"Server error"
+      success: false,
+      message: err.message
     });
   }
 });
-
 // PUT update patient
 router.put("/:id", async (req, res, next) => {
   try {

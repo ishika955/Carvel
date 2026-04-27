@@ -66,5 +66,75 @@
     "oxygen": "44",
     "notes": "no",
     "loggedBy": "Ishu"
+  },
+  {
+    "id": 7,
+    "type": "medication",
+    "patientName": "i",
+    "medication": "d",
+    "dosage": "ds",
+    "time": "04:04",
+    "status": "given",
+    "notes": "f",
+    "loggedBy": "Ishu"
+  },
+  {
+    "id": 8,
+    "type": "medication",
+    "patientName": "c",
+    "medication": "c",
+    "dosage": "s",
+    "time": "",
+    "status": "given",
+    "notes": "s",
+    "loggedBy": "User"
+  },
+  {
+    "id": 9,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-04-26T23:19",
+    "temperature": "103",
+    "pulse": "67",
+    "bloodPressure": "120/80",
+    "oxygen": "44",
+    "notes": "",
+    "loggedBy": "User"
+  },
+  {
+    "id": 10,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-04-27T13:32",
+    "temperature": "103",
+    "pulse": "67",
+    "bloodPressure": "120/80",
+    "oxygen": "44",
+    "notes": "high fever",
+    "loggedBy": "family1"
+  },
+  {
+    "id": 11,
+    "type": "vitals",
+    "patientName": "Varinda",
+    "date": "2026-04-27T18:02",
+    "temperature": "104",
+    "pulse": "72",
+    "bloodPressure": "120/80",
+    "oxygen": "99",
+    "notes": "High fever",
+    "loggedBy": "Ishita"
+  },
+  {
+    "id": 12,
+    "type": "vitals",
+    "patientName": "Ishika",
+    "date": "2026-04-27T19:04",
+    "temperature": "104",
+    "pulse": "76",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "critical",
+    "loggedBy": "User"
   }
 ]
