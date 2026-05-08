@@ -65,7 +65,7 @@
     "bloodPressure": "120/80",
     "oxygen": "44",
     "notes": "no",
-    "loggedBy": "Ishu"
+    "loggedBy": "caretaker1"
   },
   {
     "id": 7,
@@ -76,7 +76,7 @@
     "time": "04:04",
     "status": "given",
     "notes": "f",
-    "loggedBy": "Ishu"
+    "loggedBy": "caretaker1"
   },
   {
     "id": 8,
