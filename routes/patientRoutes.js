@@ -9,15 +9,26 @@ router.use((req, res, next) => {
 const { readJSON, writeJSON } = require("../services/fileStore");
 const PATIENTS_FILE = "data/patients.json";
 
-// GET all patients (with optional age filter)
+// GET all patients
 router.get("/", async (req, res, next) => {
   try {
     const age = parseInt(req.query.age);
     const patients = await readJSON(PATIENTS_FILE, []);
 
     let filteredPatients = patients;
+
+    // Caretaker sirf apne patients dekhe
+    if (req.user && req.user.role === "caretaker") {
+      filteredPatients = patients.filter(
+        (p) => p.loggedBy === req.user.username
+      );
+    }
+
+    // Age filter
     if (!isNaN(age)) {
-      filteredPatients = patients.filter((p) => Number(p.age) === age);
+      filteredPatients = filteredPatients.filter(
+        (p) => Number(p.age) === age
+      );
     }
 
     res.status(200).json({
@@ -30,21 +41,18 @@ router.get("/", async (req, res, next) => {
 });
 
 // POST create patient
-
 router.post("/", async (req, res, next) => {
   try {
-    console.log("POST body:", req.body);
     const patients = await readJSON(PATIENTS_FILE, []);
-    console.log("patients loaded:", patients.length);
 
     const newEntry = {
       id: patients.length + 1,
-      ...req.body
+      ...req.body,
+      loggedBy: req.user.username  // automatically nurse ka username lagega
     };
 
     patients.push(newEntry);
     await writeJSON(PATIENTS_FILE, patients);
-    console.log("written successfully");
 
     res.json({
       success: true,
@@ -59,28 +67,27 @@ router.post("/", async (req, res, next) => {
     });
   }
 });
+
 // PUT update patient
 router.put("/:id", async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
 
-     if (isNaN(id)) {
+    if (isNaN(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid patient ID",
       });
     }
 
-    const { name, age } = req.body;
-
     const patients = await readJSON(PATIENTS_FILE, []);
 
-if (!Array.isArray(patients)) {
-  return res.status(500).json({
-    success: false,
-    message: "patients.json must contain an array []",
-  });
-}
+    if (!Array.isArray(patients)) {
+      return res.status(500).json({
+        success: false,
+        message: "patients.json must contain an array []",
+      });
+    }
 
     const index = patients.findIndex((p) => Number(p.id) === id);
     if (index === -1) {
@@ -90,6 +97,18 @@ if (!Array.isArray(patients)) {
       });
     }
 
+    // Caretaker sirf apna data edit kare
+    if (
+      req.user.role === "caretaker" &&
+      patients[index].loggedBy !== req.user.username
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied — not your patient",
+      });
+    }
+
+    const { name, age } = req.body;
     if (name !== undefined) patients[index].name = String(name).trim();
     if (age !== undefined) {
       const ageNum = Number(age);
@@ -103,11 +122,7 @@ if (!Array.isArray(patients)) {
     }
 
     await writeJSON(PATIENTS_FILE, patients);
-
-    res.status(200).json({
-      success: true,
-      data: patients[index],
-    });
+    res.status(200).json({ success: true, data: patients[index] });
   } catch (err) {
     next(err);
   }
@@ -124,7 +139,7 @@ router.delete("/:id", async (req, res, next) => {
         message: "Invalid patient ID",
       });
     }
-    
+
     const patients = await readJSON(PATIENTS_FILE, []);
 
     const index = patients.findIndex((p) => Number(p.id) === id);
@@ -135,15 +150,22 @@ router.delete("/:id", async (req, res, next) => {
       });
     }
 
+    // Caretaker sirf apna data delete kare
+    if (
+      req.user.role === "caretaker" &&
+      patients[index].loggedBy !== req.user.username
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied — not your patient",
+      });
+    }
+
     patients.splice(index, 1);
     await writeJSON(PATIENTS_FILE, patients);
-
-    res.status(200).json({
-      success: true,
-      message: "Patient deleted",
-    });
+    res.status(200).json({ success: true, message: "Patient deleted" });
   } catch (err) {
-     next(err);
+    next(err);
   }
 });
 
