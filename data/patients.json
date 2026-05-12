@@ -88,5 +88,46 @@
     "time": "08:00",
     "reason": "back ache",
     "bookedBy": "User"
+  },
+  {
+    "id": 10,
+    "type": "vitals",
+    "patientName": "kanha",
+    "date": "2026-05-13T02:10",
+    "temperature": "102",
+    "pulse": "73",
+    "bloodPressure": "140",
+    "oxygen": "99",
+    "notes": "high fever and high bp"
+  },
+  {
+    "id": 11,
+    "type": "medication",
+    "patientName": "kanha",
+    "medication": "dolo",
+    "dosage": "500g",
+    "time": "02:10",
+    "status": "given",
+    "notes": ""
+  },
+  {
+    "id": 12,
+    "type": "appointment",
+    "patientName": "kanha",
+    "doctor": "dr.shiva",
+    "date": "2026-05-24",
+    "time": "15:00",
+    "reason": "eyes check",
+    "bookedBy": "varinda Aggarwal"
+  },
+  {
+    "id": 13,
+    "type": "appointment",
+    "patientName": "kalra",
+    "doctor": "dr.shivay",
+    "date": "2026-05-20",
+    "time": "16:00",
+    "reason": "eyes",
+    "bookedBy": "varinda Aggarwal"
   }
 ]

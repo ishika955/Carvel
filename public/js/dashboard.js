@@ -1,4 +1,5 @@
 // ── dashboard.js ──
+
 // Save token from URL if coming from Google OAuth
 const urlParams = new URLSearchParams(window.location.search);
 const urlToken = urlParams.get('token');
@@ -16,6 +17,9 @@ const authHeader = () => ({
   'Content-Type': 'application/json',
   ...(token ? { Authorization: `Bearer ${token}` } : {})
 });
+
+// ── PATIENT FILTER (globally tracked) ────────────────
+let currentPatient = '';
 
 // ── NAV CONFIG ────────────────────────────────────────
 const NAV = {
@@ -35,7 +39,7 @@ const NAV = {
 const AVATARS = { caretaker:'🧑‍⚕️', family:'👨‍👩‍👧' };
 const ROLES   = { caretaker:'Caretaker', family:'Family Member' };
 
-// ── TOP-LEVEL chart instance (must be outside all functions) ──
+// ── TOP-LEVEL chart instance ──────────────────────────
 let vitalsChartInstance = null;
 
 // ── INIT ─────────────────────────────────────────────
@@ -96,15 +100,56 @@ function setTopbar() {
 // ── LOAD DATA ────────────────────────────────────────
 async function loadData() {
   if (role === 'caretaker') {
+    await loadPatientSelector();
     await loadPatients();
     await loadCalendarAppts();
     await loadMedSchedule();
   } else if (role === 'family') {
+    await loadPatientSelector();
     await loadAlerts();
     await loadFamilyPatients();
     await loadCalendarAppts();
   } else if (role === 'doctor') {
     await loadDoctorData();
+  }
+}
+
+// ── PATIENT SELECTOR ─────────────────────────────────
+async function loadPatientSelector() {
+  try {
+    const res  = await fetch('/patients', { headers: authHeader() });
+    const data = await res.json();
+    const list = data.data || [];
+
+    // Unique patient names nikalo
+    const names = [...new Set(list.map(e => e.patientName).filter(Boolean))];
+
+    const box = document.getElementById('patientSelectorBox');
+    const sel = document.getElementById('patientSelector');
+    if (!sel || !box) return;
+
+    // Dropdown populate karo
+    sel.innerHTML = `<option value="">— All Patients —</option>` +
+      names.map(n => `<option value="${n}">${n}</option>`).join('');
+
+    // Agar patients hain toh dropdown dikhao
+    if (names.length > 0) box.style.display = 'block';
+
+  } catch(e) {
+    console.error('Patient selector load failed', e);
+  }
+}
+
+// Jab user dropdown se patient select kare
+function onPatientChange(name) {
+  currentPatient = name;
+  // Sab data naye filter ke saath reload karo
+  if (role === 'caretaker') {
+    loadPatients();
+    loadMedSchedule();
+  } else if (role === 'family') {
+    loadAlerts();
+    loadFamilyPatients();
   }
 }
 
@@ -115,35 +160,68 @@ async function loadPatients() {
     const data = await res.json();
     const list = data.data || [];
 
+    // Patient filter lagao
+    const filtered = currentPatient
+      ? list.filter(e => e.patientName === currentPatient)
+      : list;
+
     let patientsToday = new Set();
     let medsGiven = 0;
     let medsTotal = 0;
     let appointments = 0;
 
-    list.forEach(entry => {
-      if (entry.type === "vitals")     patientsToday.add(entry.patientName);
-      if (entry.type === "medication") { medsTotal++; if (entry.status === "given") medsGiven++; }
+    filtered.forEach(entry => {
+      if (entry.type === "vitals")      patientsToday.add(entry.patientName);
+      if (entry.type === "medication")  { medsTotal++; if (entry.status === "given") medsGiven++; }
       if (entry.type === "appointment") appointments++;
     });
 
-    setText('ct-statPat',    patientsToday.size);
+    setText('ct-statPat',    currentPatient ? 1 : patientsToday.size);
     setText('ct-statMeds',   `${medsGiven}/${medsTotal}`);
     setText('ct-statAlerts', 0);
     setText('ct-statAppt',   appointments);
 
+    // Timeline (Recent Activity)
     const tl = document.getElementById('ct-timeline');
-    if (tl && list.length) {
-      tl.innerHTML = list.slice(0,4).map(p => `
-        <div class="tl-item">
-          <div class="tl-left"><div class="tl-dot ${p.alert ? 'warn' : 'ok'}"></div><div class="tl-line"></div></div>
-          <div>
-            <div class="tl-title">${p.name || 'Patient'}</div>
-            <div class="tl-sub">${p.status || 'Stable'} · ${p.room || ''}</div>
-            <div class="tl-time">${p.lastUpdated || 'Today'}</div>
-          </div>
-        </div>`).join('');
+    if (tl) {
+      const recent = filtered.slice(0, 4);
+      tl.innerHTML = recent.length
+        ? recent.map(p => `
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot ${p.type === 'medication' && p.status === 'missed' ? 'warn' : 'ok'}"></div>
+                <div class="tl-line"></div>
+              </div>
+              <div>
+                <div class="tl-title">${p.patientName || 'Patient'}</div>
+                <div class="tl-sub">${p.type === 'vitals' ? '🌡️ Vitals logged' : p.type === 'medication' ? '💊 ' + (p.medication || '') + ' — ' + (p.status || '') : p.type === 'appointment' ? '📅 Appointment' : p.type}</div>
+                <div class="tl-time">${p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'Today'}</div>
+              </div>
+            </div>`).join('')
+        : `<div class="empty">No recent activity</div>`;
     }
-  } catch { setDashes(['ct-statPat','ct-statMeds','ct-statAlerts','ct-statAppt']); }
+
+    // Previous Vitals (right side of Log Vitals page)
+    const pv = document.getElementById('ct-prevVitals');
+    if (pv) {
+      const vitals = filtered.filter(e => e.type === 'vitals');
+      pv.innerHTML = vitals.length
+        ? vitals.slice().reverse().map(v => `
+            <div class="rpt-row">
+              <div class="rpt-icon">📊</div>
+              <div style="flex:1">
+                <div class="rpt-name">${v.patientName || 'Patient'}</div>
+                <div class="rpt-by">Temp: ${v.temperature || '—'}°F · Pulse: ${v.pulse || '—'}bpm · O₂: ${v.oxygen || '—'}%</div>
+              </div>
+              <div class="rpt-date">${v.date ? new Date(v.date).toLocaleDateString('en-IN') : 'Today'}</div>
+            </div>`).join('')
+        : `<div class="empty">No previous entries yet</div>`;
+    }
+
+  } catch(err) {
+    console.error('loadPatients error:', err);
+    setDashes(['ct-statPat','ct-statMeds','ct-statAlerts','ct-statAppt']);
+  }
 }
 
 // ── CARETAKER: med schedule ───────────────────────────
@@ -151,28 +229,38 @@ async function loadMedSchedule() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
     const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.patients || []);
-    const meds = list.flatMap(p => (p.medications || []).map(m => ({ ...m, patient: p.name })));
+    // FIX: data.data use karo, data.patients nahi
+    const list = data.data || [];
+
+    // Patient filter lagao
+    const filtered = currentPatient
+      ? list.filter(e => e.patientName === currentPatient)
+      : list;
+
+    const meds = filtered.filter(e => e.type === 'medication');
 
     const render = (elId) => {
       const el = document.getElementById(elId);
       if (!el) return;
       el.innerHTML = meds.length
-        ? meds.slice(0,6).map(m => `
+        ? meds.map(m => `
             <div class="med-row">
-              <div class="dot ${m.status||'pending'}"></div>
+              <div class="dot ${m.status || 'pending'}"></div>
               <div class="med-info">
-                <div class="med-name">${m.name || m.medication || 'Unknown'}</div>
-                <div class="med-meta">${m.patient}</div>
+                <div class="med-name">${m.medication || m.name || 'Unknown'}</div>
+                <div class="med-meta">${m.patientName || ''} · ${m.dosage || ''}</div>
               </div>
-              <div class="med-time">${m.time||''}</div>
-              <div class="tag ${m.status||'pending'}">${m.status||'pending'}</div>
+              <div class="med-time">${m.time || ''}</div>
+              <div class="tag ${m.status || 'pending'}">${m.status || 'pending'}</div>
             </div>`).join('')
         : `<div class="empty">No medications scheduled</div>`;
     };
+
     render('ct-overviewMeds');
     render('ct-medSchedule');
-  } catch {
+
+  } catch(err) {
+    console.error('loadMedSchedule error:', err);
     ['ct-overviewMeds','ct-medSchedule'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = `<div class="empty">Could not load medications</div>`;
@@ -185,35 +273,39 @@ async function loadAlerts() {
   try {
     const res  = await fetch('/alerts', { headers: authHeader() });
     const data = await res.json();
-   const list = Array.isArray(data) ? data : (data.data || []);
-    const unread = list.filter(a => !a.read).length;
+    const list = Array.isArray(data) ? data : (data.data || []);
+
+    // Patient filter lagao (agar patientName field ho alert mein)
+    const filtered = currentPatient
+      ? list.filter(a => !a.patientName || a.patientName === currentPatient)
+      : list;
+
+    const unread = filtered.filter(a => !a.read).length;
 
     setText('fam-statAlerts',    unread);
     setText('fam-alertBadge',    `${unread} new`);
-    setText('fam-allAlertBadge', `${list.length} total`);
+    setText('fam-allAlertBadge', `${filtered.length} total`);
 
     if (unread > 0) {
-  setText('alertCount', unread);
-  document.getElementById('alertPill').classList.add('visible');
-  
-  // Show popup with actual alert message
-  const latest = list.find(a => !a.read);
-  if (latest) {
-    const popup = document.getElementById('fam-popup');
-    setText('fam-popupMsg', latest.title || 'New alert!');
-    if (popup) popup.style.display = 'flex';  // ← ADD THIS
-  }
-}
+      setText('alertCount', unread);
+      document.getElementById('alertPill').classList.add('visible');
+      const latest = filtered.find(a => !a.read);
+      if (latest) {
+        const popup = document.getElementById('fam-popup');
+        setText('fam-popupMsg', latest.title || 'New alert!');
+        if (popup) popup.style.display = 'flex';
+      }
+    }
 
     const icons = { emergency:'🚨', missed_medication:'💊', appointment:'📅', info:'ℹ️' };
-    const html = list.length
-      ? list.map(a => `
-          <div class="al-row ${a.type==='info'?'info':a.type==='ok'?'ok':''}">
-            <div class="al-icon">${icons[a.type]||'🔔'}</div>
+    const html = filtered.length
+      ? filtered.map(a => `
+          <div class="al-row ${a.type === 'info' ? 'info' : a.type === 'ok' ? 'ok' : ''}">
+            <div class="al-icon">${icons[a.type] || '🔔'}</div>
             <div>
               <div class="al-title">${a.title || a.message || 'Alert'}</div>
-              <div class="al-desc">${a.description||''}</div>
-              <div class="al-time">${a.time || a.createdAt ||''}</div>
+              <div class="al-desc">${a.description || ''}</div>
+              <div class="al-time">${a.time || a.createdAt || ''}</div>
             </div>
           </div>`).join('')
       : `<div class="empty">No alerts at this time ✓</div>`;
@@ -222,7 +314,9 @@ async function loadAlerts() {
       const el = document.getElementById(id);
       if (el) el.innerHTML = html;
     });
-  } catch {
+
+  } catch(err) {
+    console.error('loadAlerts error:', err);
     ['fam-alertList','fam-allAlerts'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = `<div class="empty">Could not load alerts</div>`;
@@ -237,11 +331,26 @@ async function loadFamilyPatients() {
     const data = await res.json();
     const list = data.data || [];
 
-    const vitals = list.filter(e => e.type === "vitals");
-    const meds   = list.filter(e => e.type === "medication");
-    const appts  = list.filter(e => e.type === "appointment");
+    // Patient filter lagao
+    const filtered = currentPatient
+      ? list.filter(e => e.patientName === currentPatient)
+      : list;
 
-    if (!vitals.length) return;
+    const vitals = filtered.filter(e => e.type === "vitals");
+    const meds   = filtered.filter(e => e.type === "medication");
+    const appts  = filtered.filter(e => e.type === "appointment");
+
+    if (!vitals.length) {
+      // Agar koi vitals nahi toh empty state dikhao
+      setText('fam-statStatus', '—');
+      setText('fam-temp',  '—');
+      setText('fam-pulse', '—');
+      setText('fam-bp',    '—');
+      setText('fam-o2',    '—');
+      setText('fam-vNotes', 'No vitals recorded yet');
+      setText('fam-statMeds', '0/0');
+      return;
+    }
 
     const latest = vitals[vitals.length - 1];
     const prev   = vitals.length > 1 ? vitals[vitals.length - 2] : null;
@@ -254,10 +363,9 @@ async function loadFamilyPatients() {
     const statusEl = document.getElementById("fam-statStatus");
     if (statusEl) {
       statusEl.textContent = status;
-      statusEl.className = '';
-      if (status === "Stable")   statusEl.style.color = "var(--green)";
-      else if (status === "Warning") statusEl.style.color = "#9a7530";
-      else statusEl.style.color = "var(--red)";
+      if (status === "Stable")        statusEl.style.color = "var(--green)";
+      else if (status === "Warning")  statusEl.style.color = "#9a7530";
+      else                            statusEl.style.color = "var(--red)";
     }
 
     // ── TREND ──
@@ -265,7 +373,7 @@ async function loadFamilyPatients() {
     if (prev) {
       const tempDiff = Number(latest.temperature) - Number(prev.temperature);
       const o2Diff   = Number(latest.oxygen) - Number(prev.oxygen);
-      if (tempDiff > 1 || o2Diff < -3)       overallTrend = "Worsening";
+      if (tempDiff > 1 || o2Diff < -3)        overallTrend = "Worsening";
       else if (tempDiff < -0.5 || o2Diff > 2) overallTrend = "Improving";
     }
     const trendEl = document.getElementById("fam-statusTrend");
@@ -287,9 +395,9 @@ async function loadFamilyPatients() {
       const tEl  = document.getElementById(trendId);
       if (!card) return;
       const num = Number(value);
-      if (num >= danger)     card.className = "vital-card danger";
-      else if (num >= warn)  card.className = "vital-card warning";
-      else                   card.className = "vital-card ok";
+      if (num >= danger)    card.className = "vital-card danger";
+      else if (num >= warn) card.className = "vital-card warning";
+      else                  card.className = "vital-card ok";
 
       if (tEl && prevVal) {
         const diff = num - Number(prevVal);
@@ -345,8 +453,11 @@ async function loadFamilyPatients() {
       ? meds.map(m => `
           <div class="med-row">
             <div class="dot ${m.status || 'pending'}"></div>
-            <div class="med-info"><div class="med-name">${m.medication}</div></div>
-            <div class="med-time">${m.time}</div>
+            <div class="med-info">
+              <div class="med-name">${m.medication || '—'}</div>
+              <div class="med-meta">${m.dosage || ''}</div>
+            </div>
+            <div class="med-time">${m.time || ''}</div>
             <div class="tag ${m.status || 'pending'}">${m.status || 'pending'}</div>
           </div>`).join("")
       : `<div class="empty">No medication records</div>`;
@@ -372,35 +483,7 @@ async function loadFamilyPatients() {
         : `<div class="empty">No vitals history</div>`;
     }
 
-    // ── APPOINTMENTS CALENDAR ──
-    const today = new Date();
-    const upcoming = appts
-      .filter(a => a.date && new Date(a.date) >= today)
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const calEl = document.getElementById("fam-appointmentCalendar");
-    if (calEl) {
-      calEl.innerHTML = upcoming.length
-        ? `<div class="appt-calendar">` + upcoming.map(a => {
-            const d = new Date(a.date);
-            return `
-              <div class="appt-item">
-                <div class="appt-date-box">
-                  <div class="appt-day">${d.getDate()}</div>
-                  <div class="appt-month">${d.toLocaleDateString("en-IN", { month:"short" })}</div>
-                </div>
-                <div class="appt-info">
-                  <div class="appt-doctor">Dr. ${a.doctor || "Doctor"}</div>
-                  <div class="appt-time">🕐 ${a.time || "Time TBD"}</div>
-                  <div class="appt-reason">${a.reason || ""}</div>
-                  <div class="appt-patient">${a.patientName || ""}</div>
-                </div>
-              </div>`;
-          }).join("") + `</div>`
-        : `<div class="empty">No upcoming appointments scheduled</div>`;
-    }
-
-  } catch (err) {
+  } catch(err) {
     console.error("Family dashboard error:", err);
   }
 }
@@ -410,30 +493,34 @@ async function loadDoctorData() {
   try {
     const res  = await fetch('/patients', { headers: authHeader() });
     const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.patients || []);
+    const list = data.data || [];
 
-    setText('doc-statPat',  list.length);
-    setText('doc-statRep',  list.reduce((a,p) => a + (p.vitalLogs?.length||0), 0));
-    setText('doc-statAppt', list.filter(p => p.appointment).length);
-    setText('doc-statRx',   list.reduce((a,p) => a + (p.medications?.length||0), 0));
+    const patients = [...new Set(list.map(e => e.patientName).filter(Boolean))];
+    const vitals   = list.filter(e => e.type === 'vitals');
+    const appts    = list.filter(e => e.type === 'appointment');
+    const meds     = list.filter(e => e.type === 'medication');
 
-    const p = list[0];
-    if (p) {
-      const v = p.vitals || (p.vitalLogs?.[0]) || {};
-      setText('doc-temp',  v.temperature||'—');
-      setText('doc-pulse', v.pulse||'—');
-      setText('doc-bp',    v.bloodPressure||v.bp||'—');
+    setText('doc-statPat',  patients.length);
+    setText('doc-statRep',  vitals.length);
+    setText('doc-statAppt', appts.length);
+    setText('doc-statRx',   meds.length);
+
+    const latest = vitals[vitals.length - 1];
+    if (latest) {
+      setText('doc-temp',  latest.temperature || '—');
+      setText('doc-pulse', latest.pulse || '—');
+      setText('doc-bp',    latest.bloodPressure || '—');
     }
 
-    const rptHtml = list.length
-      ? list.map(p => `
+    const rptHtml = vitals.length
+      ? vitals.slice().reverse().map(v => `
           <div class="rpt-row">
             <div class="rpt-icon">📋</div>
             <div style="flex:1">
-              <div class="rpt-name">${p.name||'Patient'}</div>
-              <div class="rpt-by">Logged by caretaker · ${p.vitalLogs?.length||0} entries</div>
+              <div class="rpt-name">${v.patientName || 'Patient'}</div>
+              <div class="rpt-by">Logged by ${v.loggedBy || 'caretaker'} · Temp: ${v.temperature}°F</div>
             </div>
-            <div class="rpt-date">${p.lastUpdated||'Recent'}</div>
+            <div class="rpt-date">${v.date ? new Date(v.date).toLocaleDateString('en-IN') : 'Recent'}</div>
           </div>`).join('')
       : `<div class="empty">No reports yet</div>`;
 
@@ -441,59 +528,17 @@ async function loadDoctorData() {
       const el = document.getElementById(id);
       if (el) el.innerHTML = rptHtml;
     });
-  } catch { setDashes(['doc-statPat','doc-statRep','doc-statAppt','doc-statRx']); }
+
+  } catch(err) {
+    console.error('loadDoctorData error:', err);
+    setDashes(['doc-statPat','doc-statRep','doc-statAppt','doc-statRx']);
+  }
 }
 
 // ── SUBMIT: Vitals ────────────────────────────────────
-// async function submitVitals() {
-//   const body = {
-//     type: 'vitals',
-//     patientName:   val('vPatient'),
-//     date:          val('vDate'),
-//     temperature:   val('vTemp'),
-//     pulse:         val('vPulse'),
-//     bloodPressure: val('vBP'),
-//     oxygen:        val('vO2'),
-//     notes:         val('vNotes'),
-//     loggedBy:      username
-//   };
-
-//   if (!body.patientName) { toast('Please enter patient name', true); return; }
-
-//   await postTo('/patients', body, 'Vitals saved', async () => {
-//     try {
-//       if (Number(body.temperature) >= 102) {
-//         await fetch('/alerts', {
-//           method: 'POST',
-//           headers: authHeader(),
-//           body: JSON.stringify({
-//             type: "emergency", title: "High Fever",
-//             description: `${body.patientName} has high fever (${body.temperature}°F)`,
-//             createdAt: new Date().toISOString(), read: false
-//           })
-//         });
-//       }
-//       if (Number(body.oxygen) < 90) {
-//         await fetch('/alerts', {
-//           method: 'POST',
-//           headers: authHeader(),
-//           body: JSON.stringify({
-//             type: "emergency", title: "Low Oxygen Level",
-//             description: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
-//             createdAt: new Date().toISOString(), read: false
-//           })
-//         });
-//       }
-//     } catch (err) { console.error("Alert creation failed:", err); }
-
-//     clearForm(['vPatient','vTemp','vPulse','vBP','vO2','vNotes']);
-//     loadPatients();
-//     loadMedSchedule();
-//   });
-// }
 async function submitVitals() {
   const body = {
-    type: 'vitals',
+    type:          'vitals',
     patientName:   val('vPatient'),
     date:          val('vDate'),
     temperature:   val('vTemp'),
@@ -510,39 +555,30 @@ async function submitVitals() {
     try {
       if (Number(body.temperature) >= 102) {
         await fetch('/alerts', {
-          method: 'POST',
-          headers: authHeader(),
+          method: 'POST', headers: authHeader(),
           body: JSON.stringify({
-            type: "emergency",
-            title: "High Fever",
+            type: "emergency", title: "High Fever",
             message: `${body.patientName} has high fever (${body.temperature}°F)`,
             description: `${body.patientName} has high fever (${body.temperature}°F)`,
-            level: "critical",
-            createdAt: new Date().toISOString(),
-            read: false
+            level: "critical", createdAt: new Date().toISOString(), read: false
           })
         });
       }
-
       if (Number(body.oxygen) < 90) {
         await fetch('/alerts', {
-          method: 'POST',
-          headers: authHeader(),
+          method: 'POST', headers: authHeader(),
           body: JSON.stringify({
-            type: "emergency",
-            title: "Low Oxygen Level",
+            type: "emergency", title: "Low Oxygen Level",
             message: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
             description: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
-            level: "critical",
-            createdAt: new Date().toISOString(),
-            read: false
+            level: "critical", createdAt: new Date().toISOString(), read: false
           })
         });
       }
-
-    } catch (err) { console.error("Alert creation failed:", err); }
+    } catch(err) { console.error("Alert creation failed:", err); }
 
     clearForm(['vPatient','vTemp','vPulse','vBP','vO2','vNotes']);
+    await loadPatientSelector();
     loadPatients();
     loadMedSchedule();
   });
@@ -561,39 +597,23 @@ async function submitMedication() {
     loggedBy:    username
   };
   if (!body.patientName || !body.medication) { toast('Fill in patient and medication', true); return; }
-  await postTo('/patients', body, 'Medication logged', () => {
+  await postTo('/patients', body, 'Medication logged', async () => {
     clearForm(['mPatient','mName','mDose','mTime','mNotes']);
+    await loadPatientSelector();
     loadPatients();
     loadMedSchedule();
-  });
-}
-
-// ── SUBMIT: Appointment ───────────────────────────────
-async function submitAppointment() {
-  const body = {
-    type:        'appointment',
-    patientName: val('aPatient'),
-    doctor:      val('aDoctor'),
-    date:        val('aDate'),
-    time:        val('aTime'),
-    reason:      val('aReason'),
-    bookedBy:    username
-  };
-  if (!body.patientName || !body.date) { toast('Fill in patient and date', true); return; }
-  await postTo('/patients', body, 'Appointment booked', () => {
-    clearForm(['aPatient','aDoctor','aDate','aTime','aReason']);
   });
 }
 
 // ── SUBMIT: Prescription ──────────────────────────────
 async function submitPrescription() {
   const body = {
-    type:        'prescription',
-    patientName: val('rxPatient'),
-    medication:  val('rxMed'),
-    dosage:      val('rxDose'),
-    frequency:   val('rxFreq'),
-    notes:       val('rxNotes'),
+    type:         'prescription',
+    patientName:  val('rxPatient'),
+    medication:   val('rxMed'),
+    dosage:       val('rxDose'),
+    frequency:    val('rxFreq'),
+    notes:        val('rxNotes'),
     prescribedBy: username
   };
   if (!body.patientName || !body.medication) { toast('Fill in patient and medication', true); return; }
@@ -626,72 +646,31 @@ function toast(msg, isErr = false) {
 
 function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
 
-
 async function uploadImage() {
-
-  const fileInput =
-    document.getElementById("profileImage");
-
-  if (!fileInput.files[0]) {
-    alert("Please select an image");
-    return;
-  }
+  const fileInput = document.getElementById("profileImage");
+  if (!fileInput.files[0]) { alert("Please select an image"); return; }
 
   const formData = new FormData();
-
-  formData.append(
-    "image",
-    fileInput.files[0]
-  );
+  formData.append("image", fileInput.files[0]);
 
   try {
-
-    const response = await fetch(
-      "/upload",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
+    const response = await fetch("/upload", { method: "POST", body: formData });
     const data = await response.json();
-
-    console.log(data);
-
     if (data.success) {
-
-      const preview =
-        document.getElementById(
-          "profilePreview"
-        );
-
-      // force image refresh
-      preview.src =
-        data.imageUrl + "?t=" + new Date().getTime();
-
+      const preview = document.getElementById("profilePreview");
+      preview.src = data.imageUrl + "?t=" + new Date().getTime();
       alert("Image uploaded successfully");
-
     } else {
-
       alert("Upload failed");
-
     }
-
-  } catch (err) {
-
+  } catch(err) {
     console.log(err);
-
     alert("Server error");
-
   }
 }
 
-
-
 // ═══════════════════════════════════════════════════════
-// APPOINTMENT CALENDAR  –  replace the entire section at
-// the bottom of dashboard.js (from "APPOINTMENT CALENDAR"
-// comment down to the end of the file)
+// APPOINTMENT CALENDAR
 // ═══════════════════════════════════════════════════════
 
 let calDate = new Date();
@@ -707,7 +686,7 @@ async function loadCalendarAppts() {
     calAppointments = list.filter(e => e.type === 'appointment');
     renderCalendar();
     renderFamCalendar();
-    renderUpcomingList();   // ← new
+    renderUpcomingList();
   } catch(e) {
     console.error('Calendar load failed', e);
   }
@@ -719,7 +698,13 @@ function renderUpcomingList() {
   if (!el) return;
 
   const today = new Date();
-  const upcoming = calAppointments
+
+  // Patient filter lagao upcoming list mein bhi
+  const appts = currentPatient
+    ? calAppointments.filter(a => a.patientName === currentPatient)
+    : calAppointments;
+
+  const upcoming = appts
     .filter(a => a.date && new Date(a.date + 'T00:00:00') >= today)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -765,7 +750,6 @@ function renderCalendar() {
   const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
   let html = days.map(d => `<div class="appt-day-name">${d}</div>`).join('');
 
-  // Empty cells before month starts
   for (let i = 0; i < firstDay; i++) {
     html += `<div class="appt-cell other-month"></div>`;
   }
@@ -773,7 +757,12 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
-    const dayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
+
+    // Patient filter calendar mein bhi
+    const allDayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
+    const dayAppts = currentPatient
+      ? allDayAppts.filter(a => a.patientName === currentPatient)
+      : allDayAppts;
 
     const chips = dayAppts.map(a =>
       `<div class="appt-chip" title="${a.patientName} — Dr.${a.doctor}">
@@ -800,14 +789,12 @@ function openCalModal(dateStr) {
   const modal = document.getElementById('calModal');
   const d = new Date(dateStr + 'T00:00:00');
 
-  // Set weekday + full date in modal header
   const weekday = document.getElementById('calModalWeekday');
   if (weekday) weekday.textContent = d.toLocaleDateString('en-IN', { weekday: 'long' });
 
   document.getElementById('calModalDate').textContent =
     d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  // Show existing appointments for this date
   const dayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
   const existingLabel = dayAppts.length
     ? `<div class="appt-existing-label">${dayAppts.length} appointment${dayAppts.length > 1 ? 's' : ''} on this day</div>`
@@ -833,7 +820,6 @@ function openCalModal(dateStr) {
 function closeCalModal() {
   document.getElementById('calModal').classList.remove('open');
   calSelectedDate = null;
-  // Clear form fields
   ['calPatient','calDoctor','calTime','calReason'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -906,7 +892,12 @@ function renderFamCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
-    const dayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
+
+    // Patient filter family calendar mein bhi
+    const allDayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
+    const dayAppts = currentPatient
+      ? allDayAppts.filter(a => a.patientName === currentPatient)
+      : allDayAppts;
 
     const dots = dayAppts.map(a =>
       `<div class="appt-chip">🩺 ${a.patientName}</div>`

@@ -413,6 +413,11 @@
   background: #f8d7da;
   color: #721c24;
 }
+  
+#patientSelector option {
+  background: #353b2e;
+  color: #f5f0e6;
+}
   </style>
 </head>
 <body>
@@ -456,7 +461,12 @@
   </button>
 
 </div>
-
+  <div id="patientSelectorBox" style="padding:.75rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.07);display:none;">
+  <div style="font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(245,240,230,.35);margin-bottom:.45rem;">Select Patient</div>
+  <select id="patientSelector" style="width:100%;padding:.5rem .7rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:.35rem;color:var(--cream);font-family:'Jost',sans-serif;font-size:.8rem;cursor:pointer;color-scheme:dark;" onchange="onPatientChange(this.value)">
+    <option value="">— All Patients —</option>
+  </select>
+  </div>
   <nav class="sb-nav" id="sbNav">
     <!-- injected by JS -->
   </nav>
@@ -1033,14 +1043,14 @@
             <div class="card-title">Upcoming Appointments</div>
             <span class="badge green">Scheduled</span>
           </div>
-        <div class="cal-wrap">
-  <div class="cal-header">
-    <button class="cal-nav" onclick="famCalPrev()">‹</button>
-    <div class="cal-month-title" id="famCalMonthTitle">May 2026</div>
-    <button class="cal-nav" onclick="famCalNext()">›</button>
+        <div class="appt-page-header">
+  <div class="appt-month-nav">
+    <button class="appt-nav-btn" onclick="famCalPrev()">‹</button>
+    <div class="appt-month-label" id="famCalMonthTitle">May 2026</div>
+    <button class="appt-nav-btn" onclick="famCalNext()">›</button>
   </div>
-  <div class="cal-grid" id="famCalGrid"></div>
 </div>
+<div class="appt-cal-grid" id="famCalGrid"></div>
         </div>
       </div>
     </div>
