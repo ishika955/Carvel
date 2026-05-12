@@ -68,5 +68,25 @@
     "status": "refused",
     "notes": "",
     "loggedBy": "ishita1"
+  },
+  {
+    "id": 10,
+    "type": "appointment",
+    "patientName": "kalra",
+    "doctor": "amitabh",
+    "date": "2026-05-19",
+    "time": "10:00",
+    "reason": "sugar medicine",
+    "bookedBy": "User"
+  },
+  {
+    "id": 11,
+    "type": "appointment",
+    "patientName": "niharika",
+    "doctor": "shweta",
+    "date": "2026-05-26",
+    "time": "08:00",
+    "reason": "back ache",
+    "bookedBy": "User"
   }
 ]
