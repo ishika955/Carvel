@@ -97,10 +97,12 @@ function setTopbar() {
 async function loadData() {
   if (role === 'caretaker') {
     await loadPatients();
+    await loadCalendarAppts();
     await loadMedSchedule();
   } else if (role === 'family') {
     await loadAlerts();
     await loadFamilyPatients();
+    await loadCalendarAppts();
   } else if (role === 'doctor') {
     await loadDoctorData();
   }
@@ -623,3 +625,302 @@ function toast(msg, isErr = false) {
 }
 
 function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+
+async function uploadImage() {
+
+  const fileInput =
+    document.getElementById("profileImage");
+
+  if (!fileInput.files[0]) {
+    alert("Please select an image");
+    return;
+  }
+
+  const formData = new FormData();
+
+  formData.append(
+    "image",
+    fileInput.files[0]
+  );
+
+  try {
+
+    const response = await fetch(
+      "/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
+
+    console.log(data);
+
+    if (data.success) {
+
+      const preview =
+        document.getElementById(
+          "profilePreview"
+        );
+
+      // force image refresh
+      preview.src =
+        data.imageUrl + "?t=" + new Date().getTime();
+
+      alert("Image uploaded successfully");
+
+    } else {
+
+      alert("Upload failed");
+
+    }
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("Server error");
+
+  }
+}
+
+
+
+// ═══════════════════════════════════════════════════════
+// APPOINTMENT CALENDAR  –  replace the entire section at
+// the bottom of dashboard.js (from "APPOINTMENT CALENDAR"
+// comment down to the end of the file)
+// ═══════════════════════════════════════════════════════
+
+let calDate = new Date();
+let calSelectedDate = null;
+let calAppointments = [];
+
+// Load all appointments from DB
+async function loadCalendarAppts() {
+  try {
+    const res  = await fetch('/patients', { headers: authHeader() });
+    const data = await res.json();
+    const list = data.data || [];
+    calAppointments = list.filter(e => e.type === 'appointment');
+    renderCalendar();
+    renderFamCalendar();
+    renderUpcomingList();   // ← new
+  } catch(e) {
+    console.error('Calendar load failed', e);
+  }
+}
+
+// ── UPCOMING LIST (below the calendar) ──────────────────
+function renderUpcomingList() {
+  const el = document.getElementById('ct-upcomingList');
+  if (!el) return;
+
+  const today = new Date();
+  const upcoming = calAppointments
+    .filter(a => a.date && new Date(a.date + 'T00:00:00') >= today)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  if (!upcoming.length) {
+    el.innerHTML = `<div class="empty">No upcoming appointments scheduled</div>`;
+    return;
+  }
+
+  el.innerHTML = upcoming.map(a => {
+    const d = new Date(a.date + 'T00:00:00');
+    return `
+      <div class="appt-upcoming-card">
+        <div class="appt-upcoming-date">
+          <div class="appt-upcoming-day">${d.getDate()}</div>
+          <div class="appt-upcoming-mon">${d.toLocaleDateString('en-IN',{month:'short'})}</div>
+        </div>
+        <div class="appt-upcoming-info">
+          <div class="appt-upcoming-doctor">Dr. ${a.doctor || '—'}</div>
+          <div class="appt-upcoming-sub">
+            ${a.time ? '🕐 ' + a.time : 'Time TBD'}
+            ${a.reason ? ' · ' + a.reason : ''}
+          </div>
+          <div class="appt-upcoming-patient">${a.patientName || ''}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── CARETAKER CALENDAR ──────────────────────────────────
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+
+  const title = document.getElementById('calMonthTitle');
+  if (title) title.textContent = calDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+  const year  = calDate.getFullYear();
+  const month = calDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+
+  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let html = days.map(d => `<div class="appt-day-name">${d}</div>`).join('');
+
+  // Empty cells before month starts
+  for (let i = 0; i < firstDay; i++) {
+    html += `<div class="appt-cell other-month"></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
+    const dayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
+
+    const chips = dayAppts.map(a =>
+      `<div class="appt-chip" title="${a.patientName} — Dr.${a.doctor}">
+        🩺 ${a.patientName || 'Patient'}
+      </div>`
+    ).join('');
+
+    html += `
+      <div class="appt-cell ${isToday ? 'today' : ''} ${dayAppts.length ? 'has-appt' : ''}"
+           onclick="openCalModal('${dateStr}')">
+        <div class="appt-cell-num">${d}</div>
+        ${chips}
+      </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function calPrev() { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); }
+function calNext() { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); }
+
+function openCalModal(dateStr) {
+  calSelectedDate = dateStr;
+  const modal = document.getElementById('calModal');
+  const d = new Date(dateStr + 'T00:00:00');
+
+  // Set weekday + full date in modal header
+  const weekday = document.getElementById('calModalWeekday');
+  if (weekday) weekday.textContent = d.toLocaleDateString('en-IN', { weekday: 'long' });
+
+  document.getElementById('calModalDate').textContent =
+    d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Show existing appointments for this date
+  const dayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
+  const existingLabel = dayAppts.length
+    ? `<div class="appt-existing-label">${dayAppts.length} appointment${dayAppts.length > 1 ? 's' : ''} on this day</div>`
+    : `<div class="appt-existing-label" style="opacity:.5">No appointments on this day</div>`;
+
+  const cards = dayAppts.map(a => `
+    <div class="appt-existing-card">
+      <div class="appt-existing-icon">🩺</div>
+      <div style="flex:1">
+        <div class="appt-existing-name">${a.patientName}</div>
+        <div class="appt-existing-meta">
+          Dr. ${a.doctor || '—'} · ${a.time || 'Time TBD'}
+          ${a.reason ? ' · ' + a.reason : ''}
+        </div>
+      </div>
+      <button class="appt-del-btn" onclick="deleteCalAppt(${a.id})">🗑 Delete</button>
+    </div>`).join('');
+
+  document.getElementById('calModalAppts').innerHTML = existingLabel + cards;
+  modal.classList.add('open');
+}
+
+function closeCalModal() {
+  document.getElementById('calModal').classList.remove('open');
+  calSelectedDate = null;
+  // Clear form fields
+  ['calPatient','calDoctor','calTime','calReason'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+async function saveCalAppt() {
+  const patient = document.getElementById('calPatient').value.trim();
+  const doctor  = document.getElementById('calDoctor').value.trim();
+  const time    = document.getElementById('calTime').value;
+  const reason  = document.getElementById('calReason').value.trim();
+
+  if (!patient || !calSelectedDate) { toast('Patient name aur date required hai', true); return; }
+
+  const body = {
+    type: 'appointment',
+    patientName: patient,
+    doctor: doctor,
+    date: calSelectedDate,
+    time: time,
+    reason: reason,
+    bookedBy: username
+  };
+
+  await postTo('/patients', body, 'Appointment saved!', async () => {
+    closeCalModal();
+    await loadCalendarAppts();
+  });
+}
+
+async function deleteCalAppt(id) {
+  if (!confirm('Delete this appointment?')) return;
+  try {
+    const res = await fetch(`/patients/${id}`, {
+      method: 'DELETE', headers: authHeader()
+    });
+    if (res.ok) {
+      toast('Appointment deleted');
+      await loadCalendarAppts();
+      closeCalModal();
+    } else {
+      toast('Delete failed', true);
+    }
+  } catch { toast('Server error', true); }
+}
+
+// ── FAMILY CALENDAR (read-only) ─────────────────────────
+let famCalDate = new Date();
+
+function renderFamCalendar() {
+  const grid = document.getElementById('famCalGrid');
+  if (!grid) return;
+
+  const title = document.getElementById('famCalMonthTitle');
+  if (title) title.textContent = famCalDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+  const year  = famCalDate.getFullYear();
+  const month = famCalDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+
+  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let html = days.map(d => `<div class="appt-day-name">${d}</div>`).join('');
+
+  for (let i = 0; i < firstDay; i++) {
+    html += `<div class="appt-cell other-month"></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = today.getDate()===d && today.getMonth()===month && today.getFullYear()===year;
+    const dayAppts = calAppointments.filter(a => a.date && a.date.startsWith(dateStr));
+
+    const dots = dayAppts.map(a =>
+      `<div class="appt-chip">🩺 ${a.patientName}</div>`
+    ).join('');
+
+    html += `
+      <div class="appt-cell ${isToday ? 'today' : ''} ${dayAppts.length ? 'has-appt' : ''}">
+        <div class="appt-cell-num">${d}</div>
+        ${dots}
+      </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function famCalPrev() { famCalDate.setMonth(famCalDate.getMonth() - 1); renderFamCalendar(); }
+function famCalNext() { famCalDate.setMonth(famCalDate.getMonth() + 1); renderFamCalendar(); }
