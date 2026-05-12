@@ -24,7 +24,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     res.json({
       success: true,
-      url: result.secure_url,
+      imageUrl: result.secure_url,
       message: "Image uploaded successfully"
     });
 
