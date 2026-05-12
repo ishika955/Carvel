@@ -83,6 +83,55 @@
     }
     .sb-logout:hover{border-color:var(--red);color:var(--red);}
 
+/* ------profile----- */
+
+ .profile-section{
+  padding:1rem 1.2rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:.7rem;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+
+.profile-upload-label{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  overflow:hidden;
+  cursor:pointer;
+  border:1.5px solid rgba(196,169,107,.45);
+  background:rgba(255,255,255,.05);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+#profilePreview{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+#profileImage{
+  display:none;
+}
+
+.upload-btn{
+  width:90px;
+  padding:.42rem;
+  border:none;
+  border-radius:.35rem;
+  background:rgba(196,169,107,.9);
+  color:#23281f;
+  font-family:'Jost',sans-serif;
+  font-size:.62rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
     /* ═══ MAIN ═══ */
     .main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
 
@@ -381,7 +430,32 @@
       <div class="sb-uname" id="sbName">User</div>
       <div class="sb-urole" id="sbRole">Role</div>
     </div>
+
+    
   </div>
+
+
+  <!-- ═══════════ PROFILE ═══════════ -->
+<div class="profile-section">
+
+  <label for="profileImage"
+         class="profile-upload-label">
+
+  <img id="profilePreview"
+     src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+     alt="Profile">
+
+  </label>
+
+  <input type="file"
+         id="profileImage">
+
+  <button class="upload-btn"
+          onclick="uploadImage()">
+    Upload
+  </button>
+
+</div>
 
   <nav class="sb-nav" id="sbNav">
     <!-- injected by JS -->
@@ -391,6 +465,8 @@
     <button class="sb-logout" onclick="logout()">Sign Out</button>
   </div>
 </aside>
+
+
 
 <!-- ═══════════ MAIN ═══════════ -->
 <main class="main">
@@ -532,38 +608,279 @@
       </div>
     </div>
 
-    <!-- CT: Appointments -->
-    <div class="page" id="p-ct-appointments">
-      <div class="ph">
-        <div class="ph-title">Appointments</div>
-        <div class="ph-sub">Book and manage doctor appointments</div>
+    <!-- 
+  ╔══════════════════════════════════════════════════╗
+
+═══════════ CALENDAR CSS (paste inside <style> tag or before </style>) ═════════════ -->
+<style>
+/* ── APPOINTMENT CALENDAR ─────────────────────── */
+.appt-page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.appt-month-nav {
+  display: flex; align-items: center; gap: .75rem;
+}
+.appt-nav-btn {
+  width: 32px; height: 32px;
+  border: 1.5px solid var(--cream-dark); border-radius: .4rem;
+  background: var(--white); cursor: pointer; font-size: 1rem;
+  color: var(--text); display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.appt-nav-btn:hover { border-color: var(--olive); background: var(--cream); }
+
+.appt-month-label {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: 1.1rem; color: var(--text); min-width: 160px; text-align: center;
+}
+
+/* Grid */
+.appt-cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 3px; margin-bottom: 1.25rem;
+}
+.appt-day-name {
+  text-align: center; padding: .5rem 0;
+  font-size: .58rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted);
+}
+.appt-cell {
+  min-height: 90px; padding: .4rem .45rem;
+  border: 1px solid var(--cream-dark); border-radius: .4rem;
+  background: var(--white); cursor: pointer;
+  transition: border-color .15s, background .15s;
+  position: relative; overflow: hidden;
+}
+.appt-cell:hover { border-color: var(--olive-mid); background: rgba(74,82,64,.03); }
+.appt-cell.other-month {
+  background: var(--cream); opacity: .45; pointer-events: none;
+}
+.appt-cell.today {
+  border-color: var(--accent);
+  background: rgba(196,169,107,.05);
+}
+.appt-cell.today .appt-cell-num { color: var(--accent); font-weight: 700; }
+.appt-cell.has-appt { border-color: rgba(74,82,64,.35); }
+
+.appt-cell-num {
+  font-size: .72rem; color: var(--muted);
+  margin-bottom: .3rem; line-height: 1;
+}
+.appt-chip {
+  font-size: .58rem; padding: .12rem .4rem .12rem .3rem;
+  background: rgba(74,82,64,.1); color: var(--olive-dark);
+  border-radius: .25rem; margin-top: .15rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-left: 2px solid var(--accent);
+  display: flex; align-items: center; gap: .2rem;
+}
+.appt-chip:hover { background: var(--olive-dark); color: var(--cream); }
+
+/* Legend & summary row */
+.appt-legend {
+  display: flex; align-items: center; gap: 1.25rem;
+  font-size: .7rem; color: var(--muted); margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.appt-legend-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block; margin-right: .3rem;
+}
+
+/* Modal */
+.appt-modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(42,42,34,.4); backdrop-filter: blur(4px);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.appt-modal-bg.open { display: flex; }
+.appt-modal {
+  background: var(--white); border-radius: .85rem;
+  width: 460px; max-width: 95vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,.18);
+  animation: fadeUp .22s ease;
+  overflow: hidden;
+}
+.appt-modal-top {
+  background: var(--olive-dark); padding: 1.3rem 1.5rem;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.appt-modal-date-info { color: var(--cream); }
+.appt-modal-weekday {
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .14em;
+  color: var(--accent); margin-bottom: .2rem;
+}
+.appt-modal-fulldate {
+  font-family: 'Playfair Display', serif; font-size: 1.15rem;
+}
+.appt-modal-x {
+  background: rgba(255,255,255,.1); border: none;
+  color: var(--cream); cursor: pointer; border-radius: .3rem;
+  width: 28px; height: 28px; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.appt-modal-x:hover { background: rgba(255,255,255,.2); }
+
+.appt-modal-body { padding: 1.3rem 1.5rem; }
+
+.appt-existing-label {
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted); margin-bottom: .65rem;
+}
+.appt-existing-card {
+  display: flex; align-items: flex-start; gap: .75rem;
+  padding: .75rem .9rem; border-radius: .5rem;
+  background: var(--cream); border: 1px solid var(--cream-dark);
+  margin-bottom: .5rem; position: relative;
+}
+.appt-existing-icon {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(74,82,64,.1); display: flex;
+  align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.appt-existing-name { font-size: .88rem; font-weight: 500; color: var(--text); }
+.appt-existing-meta { font-size: .72rem; color: var(--muted); margin-top: .12rem; }
+.appt-del-btn {
+  position: absolute; top: .6rem; right: .6rem;
+  background: none; border: 1px solid rgba(196,113,74,.25);
+  color: var(--red); cursor: pointer; border-radius: .3rem;
+  font-size: .7rem; padding: .18rem .5rem;
+  transition: all .15s; opacity: .75;
+}
+.appt-del-btn:hover { background: rgba(196,113,74,.08); opacity: 1; }
+
+.appt-divider {
+  border: none; border-top: 1px solid var(--cream-dark);
+  margin: 1rem 0;
+}
+.appt-add-label {
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted); margin-bottom: .75rem;
+}
+.appt-modal-actions {
+  display: flex; gap: .6rem; margin-top: .9rem;
+}
+
+/* Upcoming list below calendar */
+.appt-upcoming-list { display: flex; flex-direction: column; gap: .6rem; }
+.appt-upcoming-card {
+  display: flex; align-items: stretch; border-radius: .6rem;
+  border: 1px solid var(--cream-dark); overflow: hidden;
+  transition: border-color .15s;
+}
+.appt-upcoming-card:hover { border-color: var(--olive-mid); }
+.appt-upcoming-date {
+  background: var(--olive-dark); color: var(--cream);
+  padding: .7rem .85rem; text-align: center;
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 62px; flex-shrink: 0;
+}
+.appt-upcoming-day {
+  font-family: 'Playfair Display', serif; font-size: 1.5rem; line-height: 1;
+}
+.appt-upcoming-mon {
+  font-size: .54rem; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--accent); margin-top: .1rem;
+}
+.appt-upcoming-info { padding: .7rem .95rem; flex: 1; background: var(--white); }
+.appt-upcoming-doctor { font-size: .88rem; font-weight: 500; }
+.appt-upcoming-sub {
+  font-size: .72rem; color: var(--muted); margin-top: .15rem;
+}
+.appt-upcoming-patient {
+  font-size: .65rem; color: var(--accent); margin-top: .2rem;
+  text-transform: uppercase; letter-spacing: .07em;
+}
+</style>
+
+<!-- ═══════════ CT: Appointments PAGE ═══════════ -->
+<div class="page" id="p-ct-appointments">
+  <div class="ph">
+    <div class="ph-title">Appointments</div>
+    <div class="ph-sub">Manage and schedule patient appointments</div>
+  </div>
+
+  <!-- Calendar Card -->
+  <div class="card full" style="margin-bottom:1.25rem;">
+    <div class="appt-page-header">
+      <div class="appt-month-nav">
+        <button class="appt-nav-btn" onclick="calPrev()">‹</button>
+        <div class="appt-month-label" id="calMonthTitle">May 2026</div>
+        <button class="appt-nav-btn" onclick="calNext()">›</button>
       </div>
-      <div class="g2">
-        <div class="card">
-          <div class="card-hd"><div class="card-title">Book New Appointment</div></div>
-          <div class="fg">
-            <div class="fgrp"><label class="flbl">Patient</label><input class="finp" id="aPatient" placeholder="Patient name"/></div>
-            <div class="fgrp"><label class="flbl">Doctor</label><input class="finp" id="aDoctor" placeholder="Doctor name"/></div>
-            <div class="fgrp"><label class="flbl">Date</label><input type="date" class="finp" id="aDate"/></div>
-            <div class="fgrp"><label class="flbl">Time</label><input type="time" class="finp" id="aTime"/></div>
-            <div class="fgrp span2"><label class="flbl">Reason for Visit</label><textarea class="ftxt" id="aReason" placeholder="Describe the reason..."></textarea></div>
-          </div>
-          <div class="factions">
-            <button class="btn btn-dark" onclick="submitAppointment()">Book Appointment</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-hd"><div class="card-title">Upcoming Appointments</div></div>
-          <div id="ct-apptList" class="rpt-list">
-            <div class="empty">No appointments scheduled</div>
-          </div>
-        </div>
+      <div class="appt-legend">
+        <span><span class="appt-legend-dot" style="background:var(--accent)"></span>Today</span>
+        <span><span class="appt-legend-dot" style="background:var(--olive-mid)"></span>Has appointment</span>
+        <span style="font-size:.68rem;color:var(--muted);font-style:italic;">Click any date to add or view appointments</span>
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         FAMILY PAGES
-    ══════════════════════════════════════════ -->
+    <div class="appt-cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- Upcoming Appointments list -->
+  <div class="card full">
+    <div class="card-hd">
+      <div class="card-title">Upcoming Appointments</div>
+      <span class="badge green">Scheduled</span>
+    </div>
+    <div class="appt-upcoming-list" id="ct-upcomingList">
+      <div class="empty">No upcoming appointments</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ APPOINTMENT MODAL ═══════════ -->
+<div class="appt-modal-bg" id="calModal">
+  <div class="appt-modal">
+    <!-- Dark header -->
+    <div class="appt-modal-top">
+      <div class="appt-modal-date-info">
+        <div class="appt-modal-weekday" id="calModalWeekday">Wednesday</div>
+        <div class="appt-modal-fulldate" id="calModalDate">Appointments</div>
+      </div>
+      <button class="appt-modal-x" onclick="closeCalModal()">✕</button>
+    </div>
+
+    <div class="appt-modal-body">
+      <!-- Existing appointments -->
+      <div id="calModalAppts"></div>
+
+      <hr class="appt-divider"/>
+
+      <!-- Add new -->
+      <div class="appt-add-label">Add New Appointment</div>
+      <div class="fg">
+        <div class="fgrp">
+          <label class="flbl">Patient Name</label>
+          <input class="finp" id="calPatient" placeholder="Patient name"/>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Doctor</label>
+          <input class="finp" id="calDoctor" placeholder="Doctor name"/>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Time</label>
+          <input type="time" class="finp" id="calTime"/>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Reason</label>
+          <input class="finp" id="calReason" placeholder="Reason for visit"/>
+        </div>
+      </div>
+      <div class="appt-modal-actions">
+        <button class="btn btn-dark" onclick="saveCalAppt()">Add Appointment</button>
+        <button class="btn btn-ghost" onclick="closeCalModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
     <!-- FAM: Overview -->
     <div class="page" id="p-fam-overview">
@@ -716,9 +1033,14 @@
             <div class="card-title">Upcoming Appointments</div>
             <span class="badge green">Scheduled</span>
           </div>
-          <div id="fam-appointmentCalendar">
-            <div class="empty">No upcoming appointments</div>
-          </div>
+        <div class="cal-wrap">
+  <div class="cal-header">
+    <button class="cal-nav" onclick="famCalPrev()">‹</button>
+    <div class="cal-month-title" id="famCalMonthTitle">May 2026</div>
+    <button class="cal-nav" onclick="famCalNext()">›</button>
+  </div>
+  <div class="cal-grid" id="famCalGrid"></div>
+</div>
         </div>
       </div>
     </div>
