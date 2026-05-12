@@ -38,7 +38,7 @@ app.use(logger);
 app.use("/auth", authRoutes);
 app.use("/patients", authMiddleware, patientRoutes);
 app.use("/alerts", authMiddleware, alertRoutes);
-app.use("/upload", authMiddleware, uploadRoutes);
+app.use("/upload", uploadRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
