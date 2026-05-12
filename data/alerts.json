@@ -9,5 +9,16 @@
     "level": "critical",
     "read": false,
     "createdAt": "2026-04-28T11:35:03.137Z"
+  },
+  {
+    "id": 2,
+    "patientId": null,
+    "type": "emergency",
+    "title": "High Fever",
+    "message": "kanha has high fever (102°F)",
+    "description": "kanha has high fever (102°F)",
+    "level": "critical",
+    "read": false,
+    "createdAt": "2026-05-12T20:41:48.405Z"
   }
 ]
