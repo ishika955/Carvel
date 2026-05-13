@@ -31,5 +31,17 @@
     "level": "critical",
     "read": false,
     "createdAt": "2026-05-13T12:19:31.941Z"
+  },
+  {
+    "id": 4,
+    "patientId": null,
+    "patientName": "Ben10",
+    "type": "emergency",
+    "title": "Low Oxygen Level",
+    "message": "Ben10 oxygen dropped to 3%",
+    "description": "Ben10 oxygen dropped to 3%",
+    "level": "critical",
+    "read": false,
+    "createdAt": "2026-05-13T13:53:09.960Z"
   }
 ]

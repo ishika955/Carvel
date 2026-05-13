@@ -62,5 +62,17 @@
     "status": "given",
     "notes": "",
     "loggedBy": "caretaker2"
+  },
+  {
+    "id": 7,
+    "type": "vitals",
+    "patientName": "Ben10",
+    "date": "2026-05-13T19:21",
+    "temperature": "32",
+    "pulse": "34",
+    "bloodPressure": "3333",
+    "oxygen": "3",
+    "notes": "3e",
+    "loggedBy": "caretaker2"
   }
 ]
