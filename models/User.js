@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String },
   phone: { type: String },
   notifyEmail: { type: String },
-  notifyPhone: { type: String }
+  notifyPhone: { type: String },
+  patients: [{ type: String }]
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

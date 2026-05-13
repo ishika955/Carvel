@@ -4,21 +4,32 @@
     "patientId": null,
     "type": "emergency",
     "title": "High Fever",
-    "message": "Niyati has high fever (102.4°F)",
-    "description": "Niyati has high fever (102.4°F)",
+    "message": "Ben10 has high fever (104°F)",
+    "description": "Ben10 has high fever (104°F)",
     "level": "critical",
     "read": false,
-    "createdAt": "2026-04-28T11:35:03.137Z"
+    "createdAt": "2026-05-13T12:19:28.141Z"
   },
   {
     "id": 2,
     "patientId": null,
     "type": "emergency",
     "title": "High Fever",
-    "message": "kanha has high fever (102°F)",
-    "description": "kanha has high fever (102°F)",
+    "message": "Ben10 has high fever (104°F)",
+    "description": "Ben10 has high fever (104°F)",
     "level": "critical",
     "read": false,
-    "createdAt": "2026-05-12T20:41:48.405Z"
+    "createdAt": "2026-05-13T12:19:29.813Z"
+  },
+  {
+    "id": 3,
+    "patientId": null,
+    "type": "emergency",
+    "title": "High Fever",
+    "message": "Ben10 has high fever (104°F)",
+    "description": "Ben10 has high fever (104°F)",
+    "level": "critical",
+    "read": false,
+    "createdAt": "2026-05-13T12:19:31.941Z"
   }
 ]

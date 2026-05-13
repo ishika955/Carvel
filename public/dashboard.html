@@ -518,11 +518,11 @@
           <div class="stat-val" id="ct-statMeds">—</div>
           <div class="stat-sub">Out of scheduled</div>
         </div>
-        <div class="stat">
+        <!-- <div class="stat">
           <div class="stat-lbl">Active Alerts</div>
           <div class="stat-val" id="ct-statAlerts">—</div>
           <div class="stat-sub">Require attention</div>
-        </div>
+        </div> -->
         <div class="stat">
           <div class="stat-lbl">Appointments</div>
           <div class="stat-val" id="ct-statAppt">—</div>
@@ -1116,6 +1116,65 @@
         </div>
       </div>
     </div>
+    <!-- FAM: Medicine Timetable -->
+<div class="page" id="p-fam-timetable">
+  <div class="ph">
+    <div class="ph-title">Medicine Timetable</div>
+    <div class="ph-sub">Weekly medication schedule — edit and save for your patient</div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title">Weekly Schedule</div>
+      <span class="badge gold" id="tt-badge">Editable</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:.82rem;" id="tt-table">
+        <thead>
+          <tr>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;width:90px;">Day</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Morning</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Afternoon</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Evening</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Night</th>
+          </tr>
+        </thead>
+        <tbody id="tt-body"></tbody>
+      </table>
+    </div>
+    <div class="factions" id="tt-actions">
+      <button class="btn btn-dark" onclick="saveTimetable()">Save Timetable</button>
+      <button class="btn btn-ghost" onclick="resetTimetable()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- CT: Medicine Timetable (Read Only) -->
+<div class="page" id="p-ct-timetable-view">
+  <div class="ph">
+    <div class="ph-title">Medicine Timetable</div>
+    <div class="ph-sub">Patient's weekly medication schedule</div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title">Weekly Schedule</div>
+      <span class="badge">Read Only</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:.82rem;" id="ct-tt-table">
+        <thead>
+          <tr>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;width:90px;">Day</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Morning</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Afternoon</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Evening</th>
+            <th style="background:var(--olive-dark);color:var(--cream);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.65rem;padding:.6rem .8rem;text-align:left;">Night</th>
+          </tr>
+        </thead>
+        <tbody id="ct-tt-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
     <!-- DOC: Prescriptions -->
     <div class="page" id="p-doc-prescriptions">

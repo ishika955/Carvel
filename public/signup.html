@@ -149,6 +149,26 @@
         <input type="tel" id="notifyPhone" class="form-input" placeholder="+91 98765 43210"/>
         <span class="error-msg" id="phone-error"></span>
       </div>
+
+      <div class="form-group">
+        <label class="form-label">Patients to Monitor <span>*</span></label>
+        <div id="patientInputs">
+          <div class="patient-input-row" style="display:flex;gap:.5rem;margin-bottom:.5rem;">
+            <input type="text" class="form-input patient-name" placeholder="Enter patient name e.g. Ishika"/>
+          </div>
+        </div>
+        <button type="button" onclick="addPatientField()" style="
+          background:none;border:1.5px dashed var(--cream-dark);
+          border-radius:.5rem;padding:.5rem 1rem;
+          font-family:'Jost',sans-serif;font-size:.8rem;
+          color:var(--text-muted);cursor:pointer;width:100%;margin-top:.25rem;
+          transition:border-color .2s;
+        " onmouseover="this.style.borderColor='#4a5240'"
+           onmouseout="this.style.borderColor='#ede7d9'">
+          + Add another patient
+        </button>
+        <span class="error-msg" id="patients-error"></span>
+      </div>
     </div>
 
     <span class="error-msg" id="signup-error" style="margin-bottom:0.75rem;"></span>
@@ -239,6 +259,19 @@ async function handleSignup() {
     if (selectedRole === 'family') {
       payload.notifyEmail = notifyEmail;
       if (notifyPhone) payload.notifyPhone = notifyPhone;
+
+      const patientInputs = document.querySelectorAll('.patient-name');
+      const patients = Array.from(patientInputs)
+        .map(input => input.value.trim())
+        .filter(name => name.length > 0);
+
+      if (patients.length === 0) {
+        showError('patients-error', 'Please enter at least one patient name');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        return;
+      }
+      payload.patients = patients;
     }
 
     const res = await fetch('/auth/register', {
@@ -264,6 +297,21 @@ async function handleSignup() {
     btn.classList.remove('loading');
     btn.disabled = false;
   }
+}
+function addPatientField() {
+  const container = document.getElementById('patientInputs');
+  const row = document.createElement('div');
+  row.className = 'patient-input-row';
+  row.style.cssText = 'display:flex;gap:.5rem;margin-bottom:.5rem;';
+  row.innerHTML = `
+    <input type="text" class="form-input patient-name" placeholder="Enter patient name"/>
+    <button type="button" onclick="this.parentElement.remove()" style="
+      background:none;border:1.5px solid var(--cream-dark);
+      border-radius:.5rem;padding:.5rem .75rem;
+      color:#c0614a;cursor:pointer;font-size:1rem;flex-shrink:0;
+    ">✕</button>
+  `;
+  container.appendChild(row);
 }
 
 document.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSignup(); });

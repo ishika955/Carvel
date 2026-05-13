@@ -14,7 +14,8 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const logger = require("./middleware/logger");
 const authMiddleware = require("./middleware/authMiddleware");
 const errorHandler = require("./middleware/errorHandler");
-
+const { startScheduler } = require("./services/schedulerService");
+startScheduler();
 const app = express();
 connectDB();
 

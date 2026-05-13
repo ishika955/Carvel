@@ -1,12 +1,12 @@
 // ── dashboard.js ──
 
-// Save token from URL if coming from Google OAuth
+// purana — replace karo
 const urlParams = new URLSearchParams(window.location.search);
 const urlToken = urlParams.get('token');
 if (urlToken) {
   sessionStorage.setItem('token', urlToken);
-  sessionStorage.setItem('role', 'caretaker');
-  sessionStorage.setItem('username', 'User');
+  sessionStorage.setItem('role', urlParams.get('role') || 'caretaker');  // ← fix
+  sessionStorage.setItem('username', urlParams.get('username') || 'User'); // ← fix
   window.history.replaceState({}, document.title, '/dashboard.html');
 }
 
@@ -24,16 +24,18 @@ let currentPatient = '';
 // ── NAV CONFIG ────────────────────────────────────────
 const NAV = {
   caretaker: [
-    { icon:'📊', label:'Overview',     page:'ct-overview' },
-    { icon:'❤️',  label:'Log Vitals',   page:'ct-vitals' },
-    { icon:'💊', label:'Medications',  page:'ct-medications' },
-    { icon:'📅', label:'Appointments', page:'ct-appointments' },
-  ],
+  { icon:'📊', label:'Overview',            page:'ct-overview' },
+  { icon:'❤️',  label:'Log Vitals',          page:'ct-vitals' },
+  { icon:'💊', label:'Medications',         page:'ct-medications' },
+  { icon:'📅', label:'Appointments',        page:'ct-appointments' },
+  { icon:'🗓️', label:'Medicine Timetable',  page:'ct-timetable-view' }, // ← ADD
+],
   family: [
-    { icon:'📊', label:'Overview',        page:'fam-overview' },
-    { icon:'🔔', label:'Alerts',          page:'fam-alerts' },
-    { icon:'📋', label:'Health Summary',  page:'fam-health' },
-  ]
+  { icon:'📊', label:'Overview',            page:'fam-overview' },
+  { icon:'🔔', label:'Alerts',              page:'fam-alerts' },
+  { icon:'📋', label:'Health Summary',      page:'fam-health' },
+  { icon:'💊', label:'Medicine Timetable',  page:'fam-timetable' }, // ← ADD
+]
 };
 
 const AVATARS = { caretaker:'🧑‍⚕️', family:'👨‍👩‍👧' };
@@ -82,6 +84,25 @@ function goPage(pageId, btn) {
 
   const item = (NAV[role] || []).find(n => n.page === pageId);
   if (item) document.getElementById('topSection').textContent = item.label;
+
+// naya — patient na ho toh bhi empty rows dikha
+if (pageId === 'fam-timetable' || pageId === 'ct-timetable-view') {
+  const patientId = document.getElementById('patientSelector')?.value;
+  if (patientId) {
+    loadTimetable();
+  } else {
+    renderTimetable({}, 'tt-body', true);
+    renderTimetable({}, 'ct-tt-body', false);
+  }
+  // caretaker page pe polling start, baaki pe band
+  if (pageId === 'ct-timetable-view') {
+    startTimetablePolling();
+  } else {
+    stopTimetablePolling();
+  }
+} else {
+  stopTimetablePolling(); // doosre page pe gaye toh polling band
+}
 }
 
 // ── TOPBAR DATE ──────────────────────────────────────
@@ -143,13 +164,22 @@ async function loadPatientSelector() {
 // Jab user dropdown se patient select kare
 function onPatientChange(name) {
   currentPatient = name;
-  // Sab data naye filter ke saath reload karo
   if (role === 'caretaker') {
     loadPatients();
     loadMedSchedule();
   } else if (role === 'family') {
     loadAlerts();
     loadFamilyPatients();
+  }
+
+  const currentPage = document.querySelector('.sb-item.active')?.dataset?.page;
+  if (currentPage === 'ct-timetable-view' || currentPage === 'fam-timetable') {
+    if (name) {          // ← value → name
+      loadTimetable();
+    } else {
+      renderTimetable({}, 'tt-body', true);
+      renderTimetable({}, 'ct-tt-body', false);
+    }
   }
 }
 
@@ -557,7 +587,9 @@ async function submitVitals() {
         await fetch('/alerts', {
           method: 'POST', headers: authHeader(),
           body: JSON.stringify({
-            type: "emergency", title: "High Fever",
+            type: "emergency",
+patientName: body.patientName,
+title: "High Fever",
             message: `${body.patientName} has high fever (${body.temperature}°F)`,
             description: `${body.patientName} has high fever (${body.temperature}°F)`,
             level: "critical", createdAt: new Date().toISOString(), read: false
@@ -568,7 +600,7 @@ async function submitVitals() {
         await fetch('/alerts', {
           method: 'POST', headers: authHeader(),
           body: JSON.stringify({
-            type: "emergency", title: "Low Oxygen Level",
+            type: "emergency",patientName: body.patientName, title: "Low Oxygen Level",
             message: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
             description: `${body.patientName} oxygen dropped to ${body.oxygen}%`,
             level: "critical", createdAt: new Date().toISOString(), read: false
@@ -911,6 +943,109 @@ function renderFamCalendar() {
   }
 
   grid.innerHTML = html;
+}
+// ── MEDICINE TIMETABLE ────────────────────────────────
+const TT_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const TT_SLOTS = ['morning','afternoon','evening','night'];
+
+function renderTimetable(data, bodyId, editable) {
+  const tbody = document.getElementById(bodyId);
+  if (!tbody) return;
+  tbody.innerHTML = TT_DAYS.map(day => {
+    const row = data[day] || {};
+    return `<tr>
+      <td style="padding:.5rem .6rem;border-bottom:1px solid var(--cream-dark);font-size:.78rem;font-weight:500;">${day.slice(0,3)}</td>
+      ${TT_SLOTS.map(slot => `
+        <td style="padding:.5rem .6rem;border-bottom:1px solid var(--cream-dark);">
+          ${editable
+            ? `<input style="width:100%;padding:.4rem .6rem;border:1.5px solid var(--cream-dark);border-radius:.35rem;background:var(--white);font-family:'Jost',sans-serif;font-size:.8rem;color:var(--text);outline:none;" 
+                placeholder="—" value="${row[slot]||''}" 
+                data-day="${day}" data-slot="${slot}"
+                onfocus="this.style.borderColor='var(--olive)'" 
+                onblur="this.style.borderColor='var(--cream-dark)'">`
+            : `<span style="font-size:.8rem;color:${row[slot]?'var(--text)':'var(--muted)'};font-style:${row[slot]?'normal':'italic'}">${row[slot]||'—'}</span>`
+          }
+        </td>`).join('')}
+    </tr>`;
+  }).join('');
+}
+function resetTimetable() {
+  // sirf inputs clear karo, DB touch mat karo
+  document.querySelectorAll('#tt-body input').forEach(inp => {
+    inp.value = '';
+  });
+}
+
+// loadTimetable — /api/ hatao
+async function loadTimetable() {
+  if (!currentPatient) return;
+  try {
+    const res = await fetch(`/patients/${currentPatient}/timetable`, {
+      headers: authHeader()  // consistent bhi kiya
+    });
+    const json = await res.json();
+    const data = json.data || {};
+    renderTimetable(data, 'tt-body', true);
+    renderTimetable(data, 'ct-tt-body', false);
+  } catch(e) {
+    toast('Could not load timetable', true);
+  }
+}
+
+// saveTimetable — duplicate hatao + URL fix
+async function saveTimetable() {
+  if (!currentPatient) return toast('Select a patient first', true);
+
+  const timetable = {};
+  document.querySelectorAll('#tt-body input').forEach(inp => {
+    const { day, slot } = inp.dataset;
+    if (!timetable[day]) timetable[day] = {};
+    timetable[day][slot] = inp.value.trim();
+  });
+
+  try {
+    const res = await fetch(`/patients/${currentPatient}/timetable`, {
+      method: 'PUT',
+      headers: authHeader(),
+      body: JSON.stringify({ timetable })
+    });
+    const json = await res.json();
+    if (json.success) {
+      toast('Timetable saved ✓');
+      renderTimetable(timetable, 'ct-tt-body', false);
+    } else {
+      toast(json.message || 'Save failed', true);
+    }
+  } catch(e) {
+    toast('Could not save timetable', true);
+  }
+}
+
+// ── TIMETABLE AUTO-REFRESH (caretaker) ───────────────
+let ttPollInterval = null;
+
+// polling — patientSelector.value → currentPatient
+function startTimetablePolling() {
+  stopTimetablePolling();
+  ttPollInterval = setInterval(async () => {
+    if (!currentPatient) return;
+    try {
+      const res = await fetch(`/patients/${currentPatient}/timetable`, {
+        headers: authHeader()
+      });
+      const json = await res.json();
+      if (json.success) {
+        renderTimetable(json.data || {}, 'ct-tt-body', false);
+      }
+    } catch(e) {}
+  }, 10000);
+}
+
+function stopTimetablePolling() {
+  if (ttPollInterval) {
+    clearInterval(ttPollInterval);
+    ttPollInterval = null;
+  }
 }
 
 function famCalPrev() { famCalDate.setMonth(famCalDate.getMonth() - 1); renderFamCalendar(); }

@@ -7,7 +7,8 @@
   {
     "username": "family1",
     "password": "1234",
-    "role": "family"
+    "role": "family",
+    "patients": ["Ben10"]
   },
   {
     "id": 1772984653801,
