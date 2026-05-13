@@ -1,4 +1,5 @@
 // server configuration
+const cors = require("cors");
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
@@ -33,6 +34,10 @@ app.use(passport.session());
 // Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: "http://localhost:5173", // Vite ka port
+  credentials: true
+}));
 app.use(logger);
 
 // Routes
@@ -46,7 +51,7 @@ app.use(express.static(path.join(__dirname, "views")));
 
 // Basic route
 app.get("/", (req, res) => {
-    res.send("Carvèl server is running");
+    res.sendFile(path.join(__dirname, "views", "index.html"));
 });
 
 app.use(errorHandler);
