@@ -43,5 +43,17 @@
     "level": "critical",
     "read": false,
     "createdAt": "2026-05-13T13:53:09.960Z"
+  },
+  {
+    "id": 5,
+    "patientId": null,
+    "patientName": "Ish",
+    "type": "emergency",
+    "title": "High Fever",
+    "message": "Ish has high fever (104°F)",
+    "description": "Ish has high fever (104°F)",
+    "level": "critical",
+    "read": false,
+    "createdAt": "2026-05-13T21:24:59.500Z"
   }
 ]

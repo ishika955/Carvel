@@ -74,5 +74,17 @@
     "oxygen": "3",
     "notes": "3e",
     "loggedBy": "caretaker2"
+  },
+  {
+    "id": 8,
+    "type": "vitals",
+    "patientName": "Ish",
+    "date": "2026-05-14T02:53",
+    "temperature": "104",
+    "pulse": "80",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "high fever",
+    "loggedBy": "Ishika Singla"
   }
 ]
