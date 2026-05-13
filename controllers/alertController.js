@@ -286,6 +286,7 @@ exports.runAutoAlerts = async (req, res, next) => {
       message: `Generated ${created.length} alerts`,
       data: created
     });
+    
 
   } catch (err) {
     next(err);
