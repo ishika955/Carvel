@@ -86,5 +86,17 @@
     "oxygen": "98",
     "notes": "high fever",
     "loggedBy": "Ishika Singla"
+  },
+  {
+    "id": 9,
+    "type": "vitals",
+    "patientName": "Niyati",
+    "date": "2026-05-14T16:57",
+    "temperature": "104",
+    "pulse": "72",
+    "bloodPressure": "120/80",
+    "oxygen": "98",
+    "notes": "high fever",
+    "loggedBy": "caretaker2"
   }
 ]
