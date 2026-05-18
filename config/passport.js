@@ -9,9 +9,11 @@ passport.use(new GoogleStrategy({
 },
 async (accessToken, refreshToken, profile, done) => {
   try {
+    // Check if user already exists with this googleId
     let user = await User.findOne({ googleId: profile.id });
     if (user) return done(null, user);
 
+    // Check if user exists with same email
     user = await User.findOne({ email: profile.emails[0].value });
     if (user) {
       user.googleId = profile.id;
@@ -20,8 +22,9 @@ async (accessToken, refreshToken, profile, done) => {
       return done(null, user);
     }
 
+    // Create new user — username mein googleId add karo uniqueness ke liye
     user = await User.create({
-      username: profile.displayName,
+      username: profile.displayName + "_" + profile.id.slice(0, 6),
       email: profile.emails[0].value,
       googleId: profile.id,
       profilePic: profile.photos[0].value,
@@ -29,6 +32,7 @@ async (accessToken, refreshToken, profile, done) => {
     });
 
     return done(null, user);
+
   } catch (err) {
     return done(err, null);
   }
