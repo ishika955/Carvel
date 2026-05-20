@@ -19,7 +19,7 @@ function App() {
 
 function Index() {
   useEffect(() => {
-    window.location.href = "http://localhost:3000/index.html";
+    window.location.href = "https://carvel.vercel.app/index.html"
   }, []);
   return null;
 }

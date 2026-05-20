@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 function Login() {
   useEffect(() => {
-    window.location.href = "http://localhost:3000/login.html";
+   window.location.href = "https://carvel.vercel.app/login.html"
   }, []);
   return null;
 }
