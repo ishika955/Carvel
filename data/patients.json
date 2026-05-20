@@ -98,5 +98,27 @@
     "oxygen": "98",
     "notes": "high fever",
     "loggedBy": "caretaker2"
+  },
+  {
+    "id": 10,
+    "type": "appointment",
+    "patientName": "Niyati",
+    "doctor": "rakhesh",
+    "date": "2026-05-27",
+    "time": "03:00",
+    "reason": "bp low",
+    "bookedBy": "niyatii",
+    "loggedBy": "niyatii"
+  },
+  {
+    "id": 11,
+    "type": "medication",
+    "patientName": "bg",
+    "medication": "bb",
+    "dosage": "bg",
+    "time": "03:49",
+    "status": "missed",
+    "notes": "no",
+    "loggedBy": "ishitaa"
   }
 ]
