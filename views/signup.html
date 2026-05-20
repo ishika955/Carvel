@@ -95,6 +95,19 @@
       <p>Select your role and fill in your details</p>
     </div>
 
+
+    <!-- Profile Photo -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.5rem;gap:.75rem;">
+      <label for="profilePicInput" style="cursor:pointer;position:relative;">
+        <img id="profilePreview"
+          src="https://ui-avatars.com/api/?name=User&background=353b2e&color=c4a96b&size=128"
+          style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);display:block;"/>
+        <div style="position:absolute;bottom:0;right:0;background:var(--accent);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.75rem;">📷</div>
+      </label>
+      <input type="file" id="profilePicInput" accept="image/*" style="display:none" onchange="previewPhoto(this)"/>
+      <span style="font-size:.7rem;color:var(--text-muted);letter-spacing:.06em;">Click to add profile photo</span>
+    </div>
+
     <!-- Role Selector -->
     <div class="role-tabs">
       <button class="role-tab active" data-role="caretaker" onclick="selectRole(this)">
@@ -274,10 +287,17 @@ async function handleSignup() {
       payload.patients = patients;
     }
 
+  const formData = new FormData();
+    Object.entries(payload).forEach(([k, v]) => {
+      if (Array.isArray(v)) v.forEach(item => formData.append(k, item));
+      else formData.append(k, v);
+    });
+    const profileFile = document.getElementById('profilePicInput').files[0];
+    if (profileFile) formData.append('profilePic', profileFile);
+
     const res = await fetch('/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: formData
     });
 
     const data = await res.json();
@@ -315,6 +335,13 @@ function addPatientField() {
 }
 
 document.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSignup(); });
+
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (file) {
+    document.getElementById('profilePreview').src = URL.createObjectURL(file);
+  }
+}
 </script>
 </body>
 </html>
