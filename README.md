@@ -1,56 +1,183 @@
-Carvèl – Elderly Care Management System
+# 🩺 Carvèl – Elder Care Monitoring System
 
-Carvèl is a web-based platform designed to ensure structured, transparent, and continuous care for elderly individuals by connecting caretakers, family members, and doctors on a single system.
-It solves the challenge of remote elderly monitoring by providing real-time health tracking, medication management, and centralized medical records.
+> “Care Well for those who once cared for us.”
 
-🚀 Features
-Role-based access control (Caretaker, Family Member)
+Carvèl is a web-based elderly care management platform designed to ensure **structured, transparent, and continuous care** for elderly individuals. It connects **caretakers and family members** on a single platform, enabling remote monitoring, medication tracking, health updates, and centralized care management.
 
-Medication schedule management
+The platform solves the challenge of **remote elderly monitoring** by providing **real-time health tracking, medication scheduling, appointment management, and emergency alerts**.
 
-Health vitals logging (BP, sugar, etc.)
+---
 
-Appointment tracking
+## 🚀 Features
 
-Real-time alerts for missed medications
+### 👨‍⚕️ Caretaker Dashboard
+- Manage daily medication schedules
+- Log health vitals (BP, sugar, temperature, etc.)
+- Record patient observations
+- Mark medicines as **taken/missed**
+- Monitor alerts and reports
 
-Centralized medical record management
+### 👨‍👩‍👧 Family Dashboard
+- Monitor elderly health remotely
+- Edit medication timetable
+- Receive emergency alerts & notifications
+- View health history and trends
+- Access centralized patient information
 
-👥 User Roles
-1. Caretaker
+### 📌 Core Functionalities
+- ✅ Role-based access control
+- ✅ Medication schedule management
+- ✅ Health vitals logging
+- ✅ Appointment tracking
+- ✅ Smart alerts for abnormal vitals
+- ✅ Missed medication notifications
+- ✅ PDF health report generation via email
+- ✅ Centralized medical records
+- ✅ Secure authentication system
 
-Manage daily medication schedules
+---
 
-Log health vitals
+## 👥 User Roles
 
-Record observations
+### **Caretaker**
+- Access only assigned patients
+- Update medications and vitals
+- View alerts and reports
 
-2. Family Member
-   
-Monitor health records remotely
+### **Family Member**
+- Monitor patient health remotely
+- Manage medication timetable
+- Receive emergency notifications
+- View patient health history
 
-Receive alerts & emergency notifications
+---
 
-🏗️ System Architecture
+## 🏗️ System Architecture
 
-Carvèl follows a secure authentication and role-based dashboards to ensure data privacy and accountability.
+Carvèl follows a **Client–Server Architecture** with **role-based dashboards** to ensure privacy and accountability.
 
-🎯 Objective
+### Workflow
 
-To create a reliable digital ecosystem that ensures elderly individuals receive consistent, trackable, and medically supervised care — regardless of physical distance.
+Client → HTTP Request → Server → Database → Response
 
-🛠️ Tech Stack
+### Architecture Pattern
+- MVC Architecture
+- Secure Authentication & Authorization
+- Protected API Routes using JWT
 
-Frontend: HTML, CSS, JavaScript  
+---
 
-Backend: Node.js, Express 
+## 🛠️ Tech Stack
 
-Database: JSON-based file storage  
+### Frontend
+- React.js
+- CSS3
+- JavaScript
 
-Authentication: Token-based middleware
+### Backend
+- Node.js
+- Express.js
 
-📌 Future Improvements
+### Database
+- MongoDB (NoSQL)
 
-AI-based health chatbot
+### Authentication & Security
+- JWT Authentication
+- Google OAuth
+- Passport.js
+- bcrypt Password Hashing
 
-Advanced analytics dashboard
+### Cloud & Storage
+- Multer
+- Cloudinary
+
+### Utilities
+- Nodemailer
+- dotenv
+- express-session
+
+### Development Tools
+- npm
+- Nodemon
+- Visual Studio Code
+- Thunder Client
+
+---
+
+## 📦 Packages Used
+
+| Package | Purpose |
+|----------|----------|
+| mongoose | MongoDB object modeling |
+| bcrypt | Password hashing |
+| jsonwebtoken | JWT authentication |
+| passport | Authentication middleware |
+| passport-google-oauth20 | Google OAuth login |
+| express-session | Session handling |
+| dotenv | Environment variable management |
+| multer | Image upload handling |
+| cloudinary | Cloud image storage |
+| nodemailer | Email alerts & PDF reports |
+
+---
+
+## 🔐 Authentication & Security
+
+Carvèl ensures secure access through:
+
+- JWT Authentication for secure login sessions
+- Google OAuth for simplified sign-in
+- Role-Based Authorization for controlled access
+- Protected Routes to prevent unauthorized access
+
+---
+
+
+## 📅 Additional Features
+
+### 💊 Medication Timetable
+- Add/Edit medicines
+- Set dosage and timing
+- Caretaker-friendly medication view
+
+### 🚨 Smart Alerts & Email Reports
+- Emergency alerts for abnormal vitals
+- Dashboard notifications
+- Automated PDF health reports via email
+
+### 📆 Appointment Calendar
+- Schedule appointments
+- Track upcoming visits
+- Organized healthcare planning
+
+### ☁️ Cloudinary Integration
+- Secure profile image uploads
+- Fast cloud-based image delivery
+- Multi-format support
+
+---
+
+
+## 🌍 Real-World Impact
+
+With the rise of **nuclear families** and increasing elderly healthcare concerns, Carvèl helps bridge the caregiving gap through **digital health monitoring and remote care management**.
+
+---
+
+
+## 👩‍💻 Team Members
+
+- Ishika (Team Leader)
+- Ishika Singla
+- Ishita Kalra
+- Varinda Aggarwal
+
+---
+
+
+
+## ❤️ Conclusion
+
+Carvèl enables **structured remote elderly care**, improves transparency between caretakers and families, reduces risks from delayed medical attention, and promotes **proactive health monitoring**.
+
+### *“Care Well for those who once cared for us.”*
