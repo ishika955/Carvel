@@ -2,70 +2,49 @@
   {
     "id": 1,
     "patientId": null,
+    "patientName": "Varinda",
     "type": "emergency",
     "title": "High Fever",
-    "message": "Ben10 has high fever (104°F)",
-    "description": "Ben10 has high fever (104°F)",
+    "message": "Varinda has high fever (104°F)",
+    "description": "Varinda has high fever (104°F)",
     "level": "critical",
     "read": false,
-    "createdAt": "2026-05-13T12:19:28.141Z"
+    "createdAt": "2026-05-20T09:28:10.396Z"
   },
   {
     "id": 2,
     "patientId": null,
+    "patientName": "Varinda",
     "type": "emergency",
-    "title": "High Fever",
-    "message": "Ben10 has high fever (104°F)",
-    "description": "Ben10 has high fever (104°F)",
+    "title": "Low Oxygen Level",
+    "message": "Varinda oxygen dropped to 89%",
+    "description": "Varinda oxygen dropped to 89%",
     "level": "critical",
     "read": false,
-    "createdAt": "2026-05-13T12:19:29.813Z"
+    "createdAt": "2026-05-20T09:28:13.864Z"
   },
   {
     "id": 3,
     "patientId": null,
+    "patientName": "Varinda",
     "type": "emergency",
     "title": "High Fever",
-    "message": "Ben10 has high fever (104°F)",
-    "description": "Ben10 has high fever (104°F)",
+    "message": "Varinda has high fever (104°F)",
+    "description": "Varinda has high fever (104°F)",
     "level": "critical",
     "read": false,
-    "createdAt": "2026-05-13T12:19:31.941Z"
+    "createdAt": "2026-05-20T09:28:16.213Z"
   },
   {
     "id": 4,
     "patientId": null,
-    "patientName": "Ben10",
+    "patientName": "Varinda",
     "type": "emergency",
     "title": "Low Oxygen Level",
-    "message": "Ben10 oxygen dropped to 3%",
-    "description": "Ben10 oxygen dropped to 3%",
+    "message": "Varinda oxygen dropped to 89%",
+    "description": "Varinda oxygen dropped to 89%",
     "level": "critical",
     "read": false,
-    "createdAt": "2026-05-13T13:53:09.960Z"
-  },
-  {
-    "id": 5,
-    "patientId": null,
-    "patientName": "Ish",
-    "type": "emergency",
-    "title": "High Fever",
-    "message": "Ish has high fever (104°F)",
-    "description": "Ish has high fever (104°F)",
-    "level": "critical",
-    "read": false,
-    "createdAt": "2026-05-13T21:24:59.500Z"
-  },
-  {
-    "id": 6,
-    "patientId": null,
-    "patientName": "Niyati",
-    "type": "emergency",
-    "title": "High Fever",
-    "message": "Niyati has high fever (104°F)",
-    "description": "Niyati has high fever (104°F)",
-    "level": "critical",
-    "read": false,
-    "createdAt": "2026-05-14T11:28:13.872Z"
+    "createdAt": "2026-05-20T09:28:19.196Z"
   }
 ]
