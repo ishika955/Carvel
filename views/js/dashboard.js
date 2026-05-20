@@ -59,6 +59,18 @@ function buildSidebar() {
   document.getElementById('sbName').textContent   = username;
   document.getElementById('sbRole').textContent   = ROLES[role] || role;
 
+
+  // Load profile pic from server
+  fetch('/auth/me', { headers: authHeader() })
+    .then(r => r.json())
+    .then(user => {
+      if (user && user.profilePic) {
+        document.getElementById('profilePreview').src = user.profilePic;
+      }
+    })
+    .catch(() => {});
+
+    
   const nav = document.getElementById('sbNav');
   nav.innerHTML = (NAV[role] || []).map(item => `
     <button class="sb-item" data-page="${item.page}" onclick="goPage('${item.page}', this)">
