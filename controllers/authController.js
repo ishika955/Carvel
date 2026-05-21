@@ -89,6 +89,6 @@ exports.googleCallback = (req, res) => {
   );
 
 res.redirect(
-    `https://carvel.vercel.app/dashboard.html?token=${token}&role=${req.user.role}&username=${encodeURIComponent(req.user.username)}`
-  );
+  `https://carvel.vercel.app/dashboard?token=${token}&role=${req.user.role}&username=${encodeURIComponent(req.user.username)}`
+);
 };
