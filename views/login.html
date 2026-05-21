@@ -380,29 +380,7 @@
     </div>
   </div>
 </div>
-<script>
-  function updateGoogleRole() {
-    const activeRole = document.querySelector(".role-tab.active")?.dataset.role || "caretaker";
-    const googleBtn = document.getElementById("googleLoginBtn");
-    googleBtn.href = `/auth/google?role=${activeRole}`;
-  }
 
-  function goGoogleLogin(event) {
-    event.preventDefault();
-
-    const activeRole = document.querySelector(".role-tab.active")?.dataset.role || "caretaker";
-
-    window.location.href = `/auth/google?role=${activeRole}`;
-  }
-
-  document.querySelectorAll(".role-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setTimeout(updateGoogleRole, 0);
-    });
-  });
-
-  updateGoogleRole();
-</script>
 <script src="js/login.js"></script>
 </body>
 </html>

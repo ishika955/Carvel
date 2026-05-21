@@ -7,7 +7,19 @@ let selectedRole = 'caretaker';
 function selectRole(el) {
   document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  selectedRole = el.getAttribute('data-role');
+
+  selectedRole = el.getAttribute('data-role') || 'caretaker';
+
+  const googleBtn = document.getElementById('googleLoginBtn');
+  if (googleBtn) {
+    googleBtn.href = `/auth/google?role=${selectedRole}`;
+  }
+}
+
+function goGoogleLogin(event) {
+  event.preventDefault();
+
+  window.location.href = `/auth/google?role=${selectedRole}`;
 }
 
 // Toggle password visibility
