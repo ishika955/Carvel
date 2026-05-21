@@ -34,8 +34,9 @@ async (accessToken, refreshToken, profile, done) => {
     return done(null, user);
 
   } catch (err) {
-    return done(err, null);
-  }
+  console.error("GOOGLE AUTH ERROR:", err);
+  return done(err, null);
+}
 }));
 
 passport.serializeUser((user, done) => done(null, user._id));
