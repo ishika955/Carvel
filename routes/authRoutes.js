@@ -12,14 +12,20 @@ router.post("/login", loginUser);
 
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-router.get(
-  "/google/callback",
-  passport.authenticate("google", { 
-    failureRedirect: "https://carvel.vercel.app/login", 
-    session: false 
-  }),
-  googleCallback
-);
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, user, info) => {
+    console.log("GOOGLE CALLBACK ERR:", err);
+    console.log("GOOGLE CALLBACK USER:", user);
+    console.log("GOOGLE CALLBACK INFO:", info);
+
+    if (err || !user) {
+      return res.redirect("https://carvel.vercel.app/login");
+    }
+
+    req.user = user;
+    return googleCallback(req, res);
+  })(req, res, next);
+});
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const User = require("../models/User");
