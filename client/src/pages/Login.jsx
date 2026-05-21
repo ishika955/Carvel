@@ -2,8 +2,9 @@ import { useEffect } from "react";
 
 function Login() {
   useEffect(() => {
-    window.location.href = "https://carvel.vercel.app/login.html";;
+    window.location.href = "https://carvel.onrender.com/login.html";
   }, []);
+
   return null;
 }
 
