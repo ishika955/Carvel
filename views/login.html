@@ -353,7 +353,7 @@
     <div class="divider">or</div>
 
 
-<a href="/auth/google" style="
+<a id="googleLoginBtn" href="/auth/google?role=caretaker" style="
   display: flex; align-items: center; justify-content: center; gap: 0.75rem;
   width: 100%; padding: 0.85rem;
   border: 1.5px solid var(--cream-dark);
@@ -380,7 +380,21 @@
     </div>
   </div>
 </div>
+<script>
+  function updateGoogleRole() {
+    const activeRole = document.querySelector(".role-tab.active")?.dataset.role || "caretaker";
+    const googleBtn = document.getElementById("googleLoginBtn");
+    googleBtn.href = `/auth/google?role=${activeRole}`;
+  }
 
+  document.querySelectorAll(".role-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setTimeout(updateGoogleRole, 0);
+    });
+  });
+
+  updateGoogleRole();
+</script>
 <script src="js/login.js"></script>
 </body>
 </html>

@@ -2,16 +2,25 @@ const express = require("express");
 const router = express.Router();
 const passport = require("passport");
 const authMiddleware = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware"); // ADD THIS
+const upload = require("../middleware/uploadMiddleware");
 
 const { registerUser, loginUser, googleCallback } = require("../controllers/authController");
 
-// ADD upload.single("profilePic") here
+// Register + Login
 router.post("/register", upload.single("profilePic"), registerUser);
 router.post("/login", loginUser);
 
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// Google Auth Start Route with selected role
+router.get("/google", (req, res, next) => {
+  const role = req.query.role === "family" ? "family" : "caretaker";
 
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    state: role
+  })(req, res, next);
+});
+
+// Google Callback Route
 router.get("/google/callback", (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, user, info) => {
     console.log("GOOGLE CALLBACK ERR:", err);
@@ -26,6 +35,8 @@ router.get("/google/callback", (req, res, next) => {
     return googleCallback(req, res);
   })(req, res, next);
 });
+
+// Current logged-in user
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const User = require("../models/User");
@@ -35,6 +46,10 @@ router.get("/me", authMiddleware, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-router.post("/logout", (req, res) => res.json({ success: true, message: "Logged out" }));
+
+// Logout
+router.post("/logout", (req, res) => {
+  res.json({ success: true, message: "Logged out" });
+});
 
 module.exports = router;
