@@ -14,10 +14,12 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "http://localhost:5173/login", session: false }),
+  passport.authenticate("google", { 
+    failureRedirect: "https://carvel.vercel.app/login", 
+    session: false 
+  }),
   googleCallback
 );
-
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const User = require("../models/User");
