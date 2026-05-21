@@ -353,7 +353,7 @@
     <div class="divider">or</div>
 
 
-<a id="googleLoginBtn" href="/auth/google?role=caretaker" style="
+<a id="googleLoginBtn" href="#" onclick="goGoogleLogin(event)" style="
   display: flex; align-items: center; justify-content: center; gap: 0.75rem;
   width: 100%; padding: 0.85rem;
   border: 1.5px solid var(--cream-dark);
@@ -385,6 +385,14 @@
     const activeRole = document.querySelector(".role-tab.active")?.dataset.role || "caretaker";
     const googleBtn = document.getElementById("googleLoginBtn");
     googleBtn.href = `/auth/google?role=${activeRole}`;
+  }
+
+  function goGoogleLogin(event) {
+    event.preventDefault();
+
+    const activeRole = document.querySelector(".role-tab.active")?.dataset.role || "caretaker";
+
+    window.location.href = `/auth/google?role=${activeRole}`;
   }
 
   document.querySelectorAll(".role-tab").forEach((btn) => {
