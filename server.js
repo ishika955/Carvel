@@ -35,7 +35,10 @@ app.use(passport.session());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: "http://localhost:5173", // Vite ka port
+  origin: [
+    "http://localhost:5173",
+    "https://carvel.vercel.app"
+  ],
   credentials: true
 }));
 app.use(logger);
@@ -46,6 +49,11 @@ app.use("/patients", authMiddleware, patientRoutes);
 app.use("/alerts", authMiddleware, alertRoutes);
 app.use("/upload", uploadRoutes);
 
+// API routes for React frontend
+app.use("/api/auth", authRoutes);
+app.use("/api/patients", authMiddleware, patientRoutes);
+app.use("/api/alerts", authMiddleware, alertRoutes);
+app.use("/api/upload", uploadRoutes);
 // Serve static files
 app.use(express.static(path.join(__dirname, "views")));
 
